@@ -10,6 +10,8 @@
 export const COMPETITIONS = [
   { id: "laliga", label: "LaLiga 2026-27" },
   { id: "ucl", label: "Champions League 2026-27" },
+  // Easter egg: only found by searching for it, never in the full list.
+  { id: "cartoon", label: "Campeones: Oliver y Benji", hidden: true },
 ];
 
 export const TEAMS = [
@@ -67,6 +69,9 @@ export const TEAMS = [
   { name: "Stuttgart", aliases: ["vfb stuttgart"], comps: ["ucl"], code: "VFB", colors: ["#FFFFFF"], text: "#E32219", accent: "#E32219" },
   { name: "Viking", aliases: ["viking fk"], comps: ["ucl"], code: "VIK", colors: ["#002F6C"], text: "#FFFFFF", accent: "#FFFFFF" },
 
+  // Easter egg.
+  { name: "Dream Team", aliases: ["oliver y benji", "oliver", "benji", "campeones", "captain tsubasa", "tsubasa"], comps: ["cartoon"], code: "DT", colors: ["#FFFFFF", "#1E5BB8"], text: "#FFFFFF", accent: "#E4002B" },
+
   // Badges only: past or possible rivals not in a 2026-27 list.
   { name: "Girona", aliases: [], comps: [], code: "GIR", colors: ["#CD2534", "#FFFFFF"], text: "#FFFFFF", accent: "#CD2534" },
   { name: "Mallorca", aliases: [], comps: [], code: "MLL", colors: ["#E20613"], text: "#FFFFFF", accent: "#111111" },
@@ -109,10 +114,18 @@ export function findTeam(name) {
   return best;
 }
 
-/** Teams whose name or alias contains every word of the query, in competition order. */
+const hiddenComps = new Set(COMPETITIONS.filter((c) => c.hidden).map((c) => c.id));
+
+/**
+ * Teams whose name or alias contains every word of the query, in competition
+ * order. A hidden competition's teams need a query of 3 letters or more.
+ */
 export function searchTeams(query) {
   const words = normalize(query).split(" ").filter(Boolean);
-  return TEAMS.filter((t) => t.comps.length && words.every((w) => searchKeys(t).some((k) => k.includes(w))));
+  const longEnough = words.join("").length >= 3;
+  return TEAMS.filter((t) => t.comps.length
+    && (longEnough || !t.comps.every((c) => hiddenComps.has(c)))
+    && words.every((w) => searchKeys(t).some((k) => k.includes(w))));
 }
 
 function escapeRegExp(s) {
