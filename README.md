@@ -28,7 +28,7 @@ node --test
 ## How the scorekeeper adds a matchday
 
 1. Open the page on the phone and tap **Nueva jornada**. The first time, the page asks for the group's PIN and remembers it on that phone.
-2. The jornada number and today's date are filled in. Enter the rival, *En casa* / *Fuera*, the goals and tap the die that came out.
+2. The jornada number and today's date are filled in. Search the rival (LaLiga and Champions League teams are listed; any other, like a Copa del Rey team, can be typed and used), *En casa* / *Fuera*, the goals and tap the die that came out.
 3. For each player set the points of the matchday (− / +, can be negative), and *Casa*. If you were 5 or more, pick who rolled the extra die (the last in the table among those watching) and what it showed: its face is added to their points. The **Vista previa** at the bottom shows the resulting table.
 4. Tap **Guardar**. If the PIN has changed since, the page asks for the new one.
 5. Back on the scoreboard, tap **Compartir** (sends the image straight to WhatsApp) or **Descargar imagen**.
@@ -68,6 +68,7 @@ Change the rule there, update its test in [tests/standings.test.js](tests/standi
 | `js/form.js` | Add / edit matchday form with live preview |
 | `js/export.js` | PNG export (html-to-image) and sharing |
 | `js/i18n.js` | Spanish and Catalan texts (flags in the top bar; the choice is remembered per phone) |
+| `js/teams.js` | Barça's possible rivals (LaLiga and Champions League 2026-27) for the rival search and the badges. Update the `comps` of each team every season |
 | `js/normas.js` | The league's rules, shown in the *Normas* tab, in Spanish and Catalan |
 | `js/app.js` | Routing (`#/`, `#/jornada/new`, `#/jornada/{n}`, `#/historial`, `#/normas`), cache, PIN |
 | `assets/crest.svg` | League crest |

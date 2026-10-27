@@ -2,12 +2,13 @@
 
 import { computeStandings, withMatchday } from "./standings.js";
 import { renderMiniTable } from "./render.js";
-import { escapeHtml, dieSvg } from "./icons.js";
+import { escapeHtml, dieSvg, teamBadgeSvg } from "./icons.js";
 import { EXTRA_DIE_MIN_WATCHERS, isDieFace } from "./rules.js";
+import { t } from "./i18n.js";
+import { COMPETITIONS, findTeam, normalize, searchTeams } from "./teams.js";
 
 /** Most extra dice a player can be given in an adjustment (dice won before it). */
 const ADJUSTMENT_MAX_EXTRA_DICE = 5;
-import { t } from "./i18n.js";
 
 /**
  * @param {HTMLElement} root
@@ -28,7 +29,10 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
 
   const state = draft ?? initialState(data, players, existing);
   const editing = Boolean(existing);
-  const rivals = [...new Set(data.matchdays.map((m) => m.rival).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+  // Rivals typed by hand before (e.g. a Copa del Rey team), offered next to the listed teams.
+  const otherRivals = [...new Set(data.matchdays.map((m) => m.rival).filter(Boolean))]
+    .filter((r) => !findTeam(r)?.comps.length)
+    .sort((a, b) => a.localeCompare(b, "es"));
 
   root.innerHTML = `
     <form class="matchday-form" novalidate>
@@ -66,10 +70,16 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
         <h3 class="match-title"></h3>
         <p class="adjustment-only match-hint" style="color:var(--muted);font-size:13px;margin:-4px 0 12px">
           ${t("matchHint")}</p>
-        <div class="field">
+        <div class="field rival-field">
           <label for="f-rival">${t("rival")}</label>
-          <input id="f-rival" class="input" type="text" list="f-rivals" autocomplete="off" value="${escapeHtml(state.rival)}">
-          <datalist id="f-rivals">${rivals.map((r) => `<option value="${escapeHtml(r)}">`).join("")}</datalist>
+          <div class="rival-input">
+            <span class="rival-badge" aria-hidden="true"></span>
+            <input id="f-rival" class="input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false"
+              aria-controls="f-rival-list" autocomplete="off" enterkeyhint="search"
+              placeholder="${escapeHtml(t("rivalSearch"))}" value="${escapeHtml(state.rival)}">
+          </div>
+          <div id="f-rival-list" class="team-list" role="listbox" aria-label="${escapeHtml(t("rival"))}" hidden></div>
+          <p class="hint" style="margin:0">${t("rivalHint")}</p>
         </div>
         <div class="field">
           <span class="label" id="f-home-label">${t("barcaPlays")}</span>
@@ -236,9 +246,73 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
     if (message) errorBox.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  // ---- rival picker: the text field searches the teams of Barça's competitions
+
+  const rivalInput = $("#f-rival");
+  const rivalList = $("#f-rival-list");
+
+  // The badge of the chosen rival; hidden while searching, when the text is still partial.
+  function showRivalBadge() {
+    const rival = state.rival.trim();
+    $(".rival-badge").innerHTML = rival && rivalList.hidden ? teamBadgeSvg(rival, false) : "";
+  }
+
+  function openRivalList() {
+    const query = rivalInput.value;
+    const option = (name) => `<button type="button" role="option" class="team-option" data-team="${escapeHtml(name)}"
+      aria-selected="${normalize(name) === normalize(state.rival)}">${teamBadgeSvg(name, false)}<span>${escapeHtml(name)}</span></button>`;
+    const found = searchTeams(query);
+    const shown = new Set();
+    let html = "";
+    for (const comp of COMPETITIONS) {
+      const teams = found.filter((team) => team.comps.includes(comp.id) && !shown.has(team.name));
+      teams.forEach((team) => shown.add(team.name));
+      if (teams.length) html += `<div class="team-group">${escapeHtml(comp.label)}</div>${teams.map((team) => option(team.name)).join("")}`;
+    }
+    const words = normalize(query).split(" ").filter(Boolean);
+    const others = otherRivals.filter((r) => words.every((w) => normalize(r).includes(w)));
+    if (others.length) html += `<div class="team-group">${t("otherRivals")}</div>${others.map(option).join("")}`;
+    const typed = query.trim();
+    if (typed && !found.concat(others.map((name) => ({ name }))).some((x) => normalize(x.name) === normalize(typed))) {
+      html += `<button type="button" role="option" class="team-option team-custom" data-team="${escapeHtml(typed)}">${t("useTyped", { name: escapeHtml(typed) })}</button>`;
+    }
+    rivalList.innerHTML = html;
+    rivalList.hidden = !html;
+    rivalInput.setAttribute("aria-expanded", String(!rivalList.hidden));
+    showRivalBadge();
+  }
+
+  function closeRivalList() {
+    rivalList.hidden = true;
+    rivalInput.setAttribute("aria-expanded", "false");
+    showRivalBadge();
+  }
+
+  rivalInput.addEventListener("focus", openRivalList);
+  rivalInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeRivalList();
+    if (e.key === "Enter") {
+      e.preventDefault(); // pick the first match instead of submitting the form
+      rivalList.querySelector(".team-option")?.click();
+    }
+  });
+  // Close the list when tapping anywhere else; the listener goes away with the form.
+  const onOutside = (e) => {
+    if (!form.isConnected) return document.removeEventListener("pointerdown", onOutside);
+    if (!e.target.closest(".rival-field")) closeRivalList();
+  };
+  document.addEventListener("pointerdown", onOutside);
+
   form.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
+    if (btn.dataset.team != null) {
+      state.rival = btn.dataset.team;
+      rivalInput.value = state.rival;
+      closeRivalList();
+      sync();
+      return;
+    }
     if (btn.classList.contains("toggle-advanced")) {
       const adv = $(".advanced");
       adv.hidden = !adv.hidden;
@@ -284,6 +358,7 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
       sync();
     } else if (e.target.matches("input")) {
       setField(e.target);
+      if (e.target === rivalInput) openRivalList();
       sync();
     }
   });
@@ -328,6 +403,7 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
     }
   }
 
+  showRivalBadge();
   sync();
   return { draft: () => state };
 }

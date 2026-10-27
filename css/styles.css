@@ -204,6 +204,27 @@ input[type="number"].input { text-align: center; }
 .dice-picker-small { gap: 6px; }
 .dice-picker-small button { padding: 4px; border-radius: 10px; }
 
+/* rival picker */
+.rival-input { position: relative; }
+.rival-badge { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 26px; height: 30px; pointer-events: none; }
+.rival-badge svg { width: 100%; height: 100%; display: block; }
+.rival-input .input { padding-left: 46px; }
+.team-list {
+  max-height: 320px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-0);
+}
+.team-group {
+  position: sticky; top: 0; padding: 6px 12px; background: var(--navy-2);
+  font-family: var(--font-cond); font-weight: 600; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; color: var(--gold);
+}
+.team-option {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 6px 12px;
+  border: 0; border-top: 1px solid rgba(36,64,110,.6); background: none; text-align: left; cursor: pointer;
+}
+.team-option svg { width: 26px; height: 30px; flex: none; }
+.team-option[aria-selected="true"] { background: rgba(245,197,24,.15); }
+.team-custom { color: var(--gold); font-weight: 600; }
+
 .dice-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
 .stepper { display: flex; align-items: stretch; }

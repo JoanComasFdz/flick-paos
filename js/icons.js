@@ -1,6 +1,8 @@
 // Inline SVG artwork for the scoreboard. No external images, so the PNG export
 // renders the same on every browser.
 
+import { findTeam, normalize } from "./teams.js";
+
 let uid = 0;
 const nextId = (prefix) => `${prefix}-${++uid}`;
 
@@ -88,53 +90,14 @@ export function ribbonSvg(className = "") {
 
 // ---------------------------------------------------------------- team badges
 
-const TEAMS = [
-  { keys: ["real madrid", "madrid"], code: "RMA", colors: ["#FFFFFF"], text: "#00529F", accent: "#FEBE10" },
-  { keys: ["athletic", "bilbao"], code: "ATH", colors: ["#E2231A", "#FFFFFF"], text: "#111111", accent: "#111111" },
-  { keys: ["atletico", "atleti"], code: "ATM", colors: ["#CB3524", "#FFFFFF"], text: "#FFFFFF", accent: "#272E61" },
-  { keys: ["sevilla"], code: "SEV", colors: ["#FFFFFF"], text: "#D71920", accent: "#D71920" },
-  { keys: ["betis"], code: "BET", colors: ["#00954C", "#FFFFFF"], text: "#FFFFFF", accent: "#00954C" },
-  { keys: ["valencia"], code: "VCF", colors: ["#FFFFFF"], text: "#111111", accent: "#EE7814" },
-  { keys: ["real sociedad", "sociedad", "la real"], code: "RSO", colors: ["#0067B1", "#FFFFFF"], text: "#FFFFFF", accent: "#0067B1" },
-  { keys: ["villarreal"], code: "VIL", colors: ["#FFE667"], text: "#005187", accent: "#005187" },
-  { keys: ["girona"], code: "GIR", colors: ["#CD2534", "#FFFFFF"], text: "#FFFFFF", accent: "#CD2534" },
-  { keys: ["espanyol"], code: "ESP", colors: ["#007FC8", "#FFFFFF"], text: "#FFFFFF", accent: "#007FC8" },
-  { keys: ["celta"], code: "CEL", colors: ["#8AC3EE"], text: "#FFFFFF", accent: "#E5254E" },
-  { keys: ["osasuna"], code: "OSA", colors: ["#D91A21"], text: "#FFFFFF", accent: "#0A346F" },
-  { keys: ["mallorca"], code: "MLL", colors: ["#E20613"], text: "#FFFFFF", accent: "#111111" },
-  { keys: ["getafe"], code: "GET", colors: ["#005999"], text: "#FFFFFF", accent: "#FFFFFF" },
-  { keys: ["rayo"], code: "RAY", colors: ["#FFFFFF"], text: "#E53027", accent: "#E53027" },
-  { keys: ["alaves"], code: "ALA", colors: ["#0761AF", "#FFFFFF"], text: "#FFFFFF", accent: "#0761AF" },
-  { keys: ["las palmas"], code: "LPA", colors: ["#FFE400"], text: "#0055A5", accent: "#0055A5" },
-  { keys: ["leganes"], code: "LEG", colors: ["#1B4A9C", "#FFFFFF"], text: "#FFFFFF", accent: "#1B4A9C" },
-  { keys: ["valladolid"], code: "VLL", colors: ["#5C2D82", "#FFFFFF"], text: "#FFFFFF", accent: "#5C2D82" },
-  { keys: ["elche"], code: "ELC", colors: ["#FFFFFF"], text: "#05642C", accent: "#05642C" },
-  { keys: ["levante"], code: "LEV", colors: ["#004F9F", "#B4053F"], text: "#FFFFFF", accent: "#B4053F" },
-  { keys: ["oviedo"], code: "OVI", colors: ["#0055A5"], text: "#FFFFFF", accent: "#FFFFFF" },
-  { keys: ["psg", "paris"], code: "PSG", colors: ["#004170"], text: "#FFFFFF", accent: "#DA291C" },
-  { keys: ["bayern"], code: "FCB", colors: ["#DC052D"], text: "#FFFFFF", accent: "#0066B2" },
-  { keys: ["inter"], code: "INT", colors: ["#0068A8", "#111111"], text: "#FFFFFF", accent: "#111111" },
-  { keys: ["milan"], code: "MIL", colors: ["#FB090B", "#111111"], text: "#FFFFFF", accent: "#111111" },
-  { keys: ["juventus", "juve"], code: "JUV", colors: ["#111111", "#FFFFFF"], text: "#FFFFFF", accent: "#111111" },
-  { keys: ["benfica"], code: "BEN", colors: ["#E83030"], text: "#FFFFFF", accent: "#FFFFFF" },
-  { keys: ["chelsea"], code: "CHE", colors: ["#034694"], text: "#FFFFFF", accent: "#FFFFFF" },
-  { keys: ["liverpool"], code: "LIV", colors: ["#C8102E"], text: "#FFFFFF", accent: "#F6EB61" },
-  { keys: ["arsenal"], code: "ARS", colors: ["#EF0107"], text: "#FFFFFF", accent: "#FFFFFF" },
-  { keys: ["manchester city", "city"], code: "MCI", colors: ["#6CABDD"], text: "#FFFFFF", accent: "#1C2C5B" },
-  { keys: ["manchester united", "united"], code: "MUN", colors: ["#DA291C"], text: "#FFFFFF", accent: "#FBE122" },
-  { keys: ["dortmund"], code: "BVB", colors: ["#FDE100"], text: "#111111", accent: "#111111" },
-];
-
-const normalize = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-
 function teamStyle(name) {
-  const n = normalize(name);
-  const known = TEAMS.find((t) => t.keys.some((k) => n.includes(k)));
-  if (known) return known;
+  const known = findTeam(name);
+  if (known?.colors) return known;
+  // Unknown team, or one without colours yet: a stable colour from its name.
   let hash = 0;
-  for (const c of n) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+  for (const c of normalize(name)) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
   const hue = hash % 360;
-  return { code: teamCode(name), colors: [`hsl(${hue} 55% 38%)`], text: "#FFFFFF", accent: "#FFFFFF" };
+  return { code: known?.code || teamCode(name), colors: [`hsl(${hue} 55% 38%)`], text: "#FFFFFF", accent: "#FFFFFF" };
 }
 
 function teamCode(name) {
