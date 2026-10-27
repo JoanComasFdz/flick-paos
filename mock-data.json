@@ -1,0 +1,184 @@
+{
+  "season": "3",
+  "currentSeason": "3",
+  "seasons": [
+    "3"
+  ],
+  "players": [
+    {
+      "player_id": "salva",
+      "name": "Salva",
+      "titles": 2,
+      "active": true,
+      "order": 1
+    },
+    {
+      "player_id": "victor",
+      "name": "Víctor",
+      "titles": 0,
+      "active": true,
+      "order": 2
+    },
+    {
+      "player_id": "oli",
+      "name": "Olí",
+      "titles": 0,
+      "active": true,
+      "order": 3
+    },
+    {
+      "player_id": "colo",
+      "name": "Colo",
+      "titles": 0,
+      "active": true,
+      "order": 4
+    },
+    {
+      "player_id": "puig",
+      "name": "Puig",
+      "titles": 0,
+      "active": true,
+      "order": 5
+    },
+    {
+      "player_id": "edgar",
+      "name": "Edgar",
+      "titles": 0,
+      "active": true,
+      "order": 6
+    },
+    {
+      "player_id": "roger",
+      "name": "Roger",
+      "titles": 0,
+      "active": true,
+      "order": 7
+    },
+    {
+      "player_id": "joan",
+      "name": "Joan",
+      "titles": 0,
+      "active": true,
+      "order": 8
+    },
+    {
+      "player_id": "jon",
+      "name": "Jon",
+      "titles": 0,
+      "active": true,
+      "order": 9
+    },
+    {
+      "player_id": "lucas",
+      "name": "Lucas",
+      "titles": 0,
+      "active": true,
+      "order": 10
+    }
+  ],
+  "matchdays": [
+    {
+      "season": "3",
+      "jornada": 14,
+      "type": "adjustment",
+      "date": "2026-10-26",
+      "rival": "Real Madrid",
+      "home_away": "away",
+      "barca_goals": 1,
+      "rival_goals": 2,
+      "dice": 4,
+      "dice_counts": [
+        0,
+        4,
+        2,
+        3,
+        4,
+        1
+      ],
+      "notes": "Punto de partida: clasificación tras la jornada 14",
+      "updated_at": "2026-10-26T22:00:00.000Z"
+    }
+  ],
+  "scores": [
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "salva",
+      "points": 56,
+      "casa": 5,
+      "extra_dice": 0
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "victor",
+      "points": 53,
+      "casa": 2,
+      "extra_dice": 0
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "oli",
+      "points": 50,
+      "casa": 2,
+      "extra_dice": 0
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "colo",
+      "points": 48,
+      "casa": 3,
+      "extra_dice": 1
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "puig",
+      "points": 47,
+      "casa": 1,
+      "extra_dice": 1
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "edgar",
+      "points": 42,
+      "casa": 0,
+      "extra_dice": 2
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "roger",
+      "points": 41,
+      "casa": 0,
+      "extra_dice": 1
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "joan",
+      "points": 31,
+      "casa": 0,
+      "extra_dice": 0
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "jon",
+      "points": 28,
+      "casa": 2,
+      "extra_dice": 1
+    },
+    {
+      "season": "3",
+      "jornada": 14,
+      "player_id": "lucas",
+      "points": 27,
+      "casa": 0,
+      "extra_dice": 1
+    }
+  ]
+}
