@@ -2,6 +2,7 @@
 // With ?mock=1 the data comes from mock-data.json and writes stay in memory (PIN "1234").
 
 import { API_URL } from "./config.js";
+import { t } from "./i18n.js";
 
 const TIMEOUT_MS = 20000;
 const MOCK_PIN = "1234";
@@ -50,12 +51,12 @@ async function request(url, init) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { ...init, redirect: "follow", signal: controller.signal });
-    if (!res.ok) throw new ApiError(`Error del servidor (${res.status})`);
+    if (!res.ok) throw new ApiError(t("serverError", { status: res.status }));
     return await res.json();
   } catch (err) {
     if (err instanceof ApiError) throw err;
-    if (err.name === "AbortError") throw new ApiError("El servidor no responde", { timeout: true });
-    throw new ApiError("No se pudo conectar con el servidor");
+    if (err.name === "AbortError") throw new ApiError(t("serverTimeout"), { timeout: true });
+    throw new ApiError(t("noConnection"));
   } finally {
     clearTimeout(timer);
   }
@@ -63,7 +64,7 @@ async function request(url, init) {
 
 function unwrap(json) {
   if (!json || json.ok !== true) {
-    const message = (json && json.error) || "Respuesta inesperada del servidor";
+    const message = (json && json.error) || t("unexpected");
     throw new ApiError(message, { wrongPin: message === "Wrong PIN" });
   }
   return json.data;

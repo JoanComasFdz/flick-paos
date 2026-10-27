@@ -58,6 +58,16 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--white); text-decoration: none;
 }
 .topbar-title span { color: var(--gold); }
+.langs { display: flex; gap: 2px; margin-left: auto; flex: none; }
+.lang {
+  width: 44px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; border-radius: 8px;
+  opacity: .45; -webkit-tap-highlight-color: transparent;
+}
+.lang svg { width: 28px; height: 19px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(255,255,255,.25); display: block; }
+.lang[aria-pressed="true"] { opacity: 1; }
+.lang[aria-pressed="true"] svg { box-shadow: 0 0 0 2px var(--gold); }
+.lang:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .topbar select {
   min-height: 44px; padding: 0 12px; border-radius: 10px;
   background: var(--navy-2); border: 1px solid var(--navy-line);

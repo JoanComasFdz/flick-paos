@@ -66,6 +66,7 @@ Change the rule there, update its test in [tests/standings.test.js](tests/standi
 | `js/render.js`, `js/icons.js` | The card's DOM and its inline SVG artwork |
 | `js/form.js` | Add / edit matchday form with live preview |
 | `js/export.js` | PNG export (html-to-image) and sharing |
+| `js/i18n.js` | Spanish and Catalan texts (flags in the top bar; the choice is remembered per phone) |
 | `js/app.js` | Routing (`#/`, `#/jornada/new`, `#/jornada/{n}`, `#/historial`), cache, PIN |
 | `assets/crest.svg` | League crest |
 | `code.gs` | The Apps Script backend |

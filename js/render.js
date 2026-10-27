@@ -3,6 +3,7 @@
 import {
   escapeHtml, dieSvg, bigRedDieSvg, trophySvg, calendarSvg, ribbonSvg, teamBadgeSvg,
 } from "./icons.js";
+import { t } from "./i18n.js";
 
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1620;
@@ -31,23 +32,23 @@ export function renderCard(vm) {
     <div class="c-header">
       <div class="c-crest">${uniqueCrest()}</div>
       <div class="c-title">
-        <div class="c-title-top">LA LIGA DE LOS</div>
+        <div class="c-title-top">${t("cardTitleTop")}</div>
         <div class="c-title-main">FLICK-PAOS</div>
       </div>
-      <div class="c-ribbon">${ribbonSvg("c-ribbon-bg")}<span>TEMPORADA <b>${escapeHtml(vm.season)}</b></span></div>
+      <div class="c-ribbon">${ribbonSvg("c-ribbon-bg")}<span>${t("cardSeason")} <b>${escapeHtml(vm.season)}</b></span></div>
     </div>
     ${matchBar(vm.header)}
     <div class="c-table">
       <div class="c-thead">
-        <div class="c-pos">POS.</div><div class="c-name">JUGADOR</div><div class="c-pts">PUNTOS</div>
-        <div class="c-casa">CASA</div><div class="c-extra">DADO<br>EXTRA</div>
+        <div class="c-pos">${t("cardPos")}</div><div class="c-name">${t("cardPlayer")}</div><div class="c-pts">${t("cardPoints")}</div>
+        <div class="c-casa">${t("cardCasa")}</div><div class="c-extra">${t("cardExtra")}</div>
       </div>
-      <div class="c-tbody">${vm.rows.map(tableRow).join("") || `<div class="c-empty">Sin jugadores</div>`}</div>
+      <div class="c-tbody">${vm.rows.map(tableRow).join("") || `<div class="c-empty">${t("cardNoPlayers")}</div>`}</div>
     </div>
     ${dicePanel(vm.diceCounts, vm.header?.dice ?? null)}
     <div class="c-footer">
-      <div class="c-played">${calendarSvg("c-cal")}<span>${vm.jornadasPlayed} ${vm.jornadasPlayed === 1 ? "JORNADA DISPUTADA" : "JORNADAS DISPUTADAS"}</span></div>
-      <div class="c-note">*Un dado por jugador para<br>la fase de bonificación</div>
+      <div class="c-played">${calendarSvg("c-cal")}<span>${vm.jornadasPlayed} ${t(vm.jornadasPlayed === 1 ? "cardPlayed1" : "cardPlayedN")}</span></div>
+      <div class="c-note">${t("cardNote")}</div>
     </div>`;
   return card;
 }
@@ -65,7 +66,7 @@ function rowFontSize(n) {
 }
 
 function matchBar(h) {
-  const jornada = `<div class="c-jornada">${calendarSvg("c-cal")}<span>${h ? `JORNADA ${h.jornada}` : "SIN JORNADAS"}</span></div>`;
+  const jornada = `<div class="c-jornada">${calendarSvg("c-cal")}<span>${h ? t("cardJornada", { n: h.jornada }) : t("cardNoMatchdays")}</span></div>`;
   if (!h || !h.showMatch) {
     return `<div class="c-match c-match-bare">${jornada}${h?.dice ? diceBox(h.dice) : ""}</div>`;
   }
@@ -94,7 +95,7 @@ function teamNameSize(name) {
 }
 
 function diceBox(face) {
-  return `<div class="c-dice"><div class="c-dice-label">DADO:<span class="c-dice-num">${face}</span></div>${dieSvg(face, { style: "red", className: "c-dice-die" })}</div>`;
+  return `<div class="c-dice"><div class="c-dice-label">${t("cardDice")}<span class="c-dice-num">${face}</span></div>${dieSvg(face, { style: "red", className: "c-dice-die" })}</div>`;
 }
 
 function tableRow(r) {
@@ -117,7 +118,7 @@ function dicePanel(counts, lastFace) {
       <div class="c-face-count">${count}</div>
     </div>`).join("");
   return `<div class="c-dicepanel">
-    <div class="c-dicepanel-title">${bigRedDieSvg("c-bigdie")}<span>DADO – VECES QUE HA SALIDO</span></div>
+    <div class="c-dicepanel-title">${bigRedDieSvg("c-bigdie")}<span>${t("cardDicePanel")}</span></div>
     <div class="c-faces">${cols}</div>
   </div>`;
 }
@@ -142,8 +143,8 @@ export function renderMiniTable(vm) {
       <td class="num">${r.casa}</td><td class="num">${r.extraDiceFaces.map((f) => f || "?").join(" ")}</td>
     </tr>`).join("");
   return `<table class="mini">
-    <thead><tr><th>Pos.</th><th>Jugador</th><th class="num">Puntos</th><th class="num">Casa</th><th class="num">Dado extra</th></tr></thead>
+    <thead><tr><th>${t("miniPos")}</th><th>${t("miniPlayer")}</th><th class="num">${t("points")}</th><th class="num">${t("casa")}</th><th class="num">${t("extraDice")}</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-  <p class="mini-dice">Dado: ${vm.diceCounts.map((c, i) => `<span>${i + 1}<b>×${c}</b></span>`).join(" ")}</p>`;
+  <p class="mini-dice">${t("dice")}: ${vm.diceCounts.map((c, i) => `<span>${i + 1}<b>×${c}</b></span>`).join(" ")}</p>`;
 }

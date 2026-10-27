@@ -6,6 +6,7 @@ import { renderCard, mountScaled, loadCrest } from "./render.js";
 import { renderForm } from "./form.js";
 import { cardPng, downloadPng, sharePng, canShareFiles } from "./export.js";
 import { escapeHtml, dieSvg } from "./icons.js";
+import { t, getLang, setLang, locale, LANGS } from "./i18n.js";
 
 const view = document.getElementById("view");
 const seasonSelect = document.getElementById("season");
@@ -63,7 +64,7 @@ async function load({ season = state.season } = {}) {
     setData(data, at);
   } catch (err) {
     state.error = err;
-    if (state.data) toast("No se pudo actualizar: " + err.message, true);
+    if (state.data) toast(t("updateFailed", { msg: err.message }), true);
   } finally {
     state.loading = false;
     rerender();
@@ -95,7 +96,7 @@ function renderSeasons() {
   seasonSelect.hidden = !show;
   seasonLabel.hidden = !show;
   if (!show) return;
-  seasonSelect.innerHTML = seasons.map((s) => `<option value="${escapeHtml(s)}">Temporada ${escapeHtml(s)}</option>`).join("");
+  seasonSelect.innerHTML = seasons.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(t("seasonOption", { s }))}</option>`).join("");
   seasonSelect.value = state.data.season;
 }
 
@@ -127,7 +128,7 @@ function ensurePin(message = "", onChecking = () => {}) {
         await api.checkPin(pin);
       } catch (err) {
         if (!err.wrongPin) throw err;
-        message = "PIN incorrecto. Prueba otra vez.";
+        message = t("wrongPin");
         continue;
       }
       storage.set(PIN_KEY, pin);
@@ -148,7 +149,7 @@ async function withPin(write) {
     } catch (err) {
       if (!err.wrongPin) throw err;
       storage.remove(PIN_KEY);
-      message = "PIN incorrecto. Prueba otra vez.";
+      message = t("wrongPin");
     }
   }
 }
@@ -199,16 +200,16 @@ function renderLoadingOrError() {
   if (state.error) {
     view.innerHTML = `<div class="error-box" role="alert">
       <p>${escapeHtml(state.error.message)}</p>
-      <button type="button" class="btn btn-primary retry">Reintentar</button></div>`;
+      <button type="button" class="btn btn-primary retry">${t("retry")}</button></div>`;
     view.querySelector(".retry").addEventListener("click", () => load());
   } else {
-    view.innerHTML = `<div class="loading" role="status"><div class="spinner"></div><p>Cargando la liga…</p></div>`;
+    view.innerHTML = `<div class="loading" role="status"><div class="spinner"></div><p>${t("loading")}</p></div>`;
   }
 }
 
 function statusLine() {
-  const age = `<span class="age">${state.loading ? "Actualizando…" : "Actualizado " + timeAgo(state.fetchedAt)}</span>`;
-  const retry = state.error && !state.loading ? `<button type="button" class="btn btn-small retry">Reintentar</button>` : "";
+  const age = `<span class="age">${state.loading ? t("updating") : t("updated", { ago: timeAgo(state.fetchedAt) })}</span>`;
+  const retry = state.error && !state.loading ? `<button type="button" class="btn btn-small retry">${t("retry")}</button>` : "";
   return `<div class="status">${age}${retry}</div>`;
 }
 
@@ -216,7 +217,7 @@ function bindStatus() {
   view.querySelector(".status .retry")?.addEventListener("click", () => load());
   ageTimer = setInterval(() => {
     const el = view.querySelector(".status .age");
-    if (el && !state.loading) el.textContent = "Actualizado " + timeAgo(state.fetchedAt);
+    if (el && !state.loading) el.textContent = t("updated", { ago: timeAgo(state.fetchedAt) });
   }, 30000);
 }
 
@@ -228,24 +229,24 @@ function showScoreboard() {
     ${statusLine()}
     <div class="card-host" role="img" aria-label="${escapeHtml(cardDescription(vm))}"></div>
     <div class="actions">
-      <button type="button" class="btn btn-primary download ${shareSupported ? "" : "wide"}">Descargar imagen</button>
-      ${shareSupported ? `<button type="button" class="btn btn-garnet share">Compartir</button>` : ""}
-      <a class="btn" href="#/jornada/new">Nueva jornada</a>
-      <a class="btn" href="#/historial">Historial</a>
+      <button type="button" class="btn btn-primary download ${shareSupported ? "" : "wide"}">${t("download")}</button>
+      ${shareSupported ? `<button type="button" class="btn btn-garnet share">${t("share")}</button>` : ""}
+      <a class="btn" href="#/jornada/new">${t("newMatchday")}</a>
+      <a class="btn" href="#/historial">${t("history")}</a>
     </div>`;
   bindStatus();
   refit = mountScaled(view.querySelector(".card-host"), renderCard(vm));
 
   const download = view.querySelector(".download");
-  download.addEventListener("click", () => busy(download, "Generando…", () => downloadPng(vm)));
+  download.addEventListener("click", () => busy(download, t("generating"), () => downloadPng(vm)));
   const share = view.querySelector(".share");
-  share?.addEventListener("click", () => busy(share, "Preparando…", async () => {
+  share?.addEventListener("click", () => busy(share, t("preparing"), async () => {
     try {
       await sharePng(vm);
     } catch (err) {
       if (err.name === "AbortError") return; // the user closed the share sheet
       // Safari needs the share to start right after the tap; the image is ready now.
-      if (err.name === "NotAllowedError") return toast("Imagen preparada: pulsa Compartir otra vez.");
+      if (err.name === "NotAllowedError") return toast(t("shareAgain"));
       throw err;
     }
   }));
@@ -262,7 +263,7 @@ async function busy(button, label, action) {
   try {
     await action();
   } catch (err) {
-    toast("No se pudo generar la imagen: " + err.message, true);
+    toast(t("imageFailed", { msg: err.message }), true);
   } finally {
     button.disabled = false;
     button.textContent = text;
@@ -271,7 +272,7 @@ async function busy(button, label, action) {
 
 function cardDescription(vm) {
   const top = vm.rows.slice(0, 3).map((r) => `${r.pos}. ${r.name} ${r.points}`).join(", ");
-  return `Clasificación de la temporada ${vm.season} tras ${vm.jornadasPlayed} jornadas: ${top}`;
+  return t("cardDescription", { season: vm.season, n: vm.jornadasPlayed, top });
 }
 
 /** Asks for the PIN before showing the form, so nobody fills it in for nothing. */
@@ -281,7 +282,7 @@ async function openForm(jornada) {
   let pin = null;
   try {
     pin = await ensurePin("", () => {
-      view.innerHTML = `<div class="loading" role="status"><div class="spinner"></div><p>Comprobando el PIN…</p></div>`;
+      view.innerHTML = `<div class="loading" role="status"><div class="spinner"></div><p>${t("checkingPin")}</p></div>`;
     });
   } catch (err) {
     toast(err.message, true);
@@ -294,29 +295,33 @@ async function openForm(jornada) {
   showForm(jornada);
 }
 
-function showForm(jornada) {
-  renderForm(view, {
+let openFormState = null; // { jornada, form } while a form is on screen
+
+function showForm(jornada, draft) {
+  const form = renderForm(view, {
     data: state.data,
     jornada,
+    draft,
     onCancel: () => { location.hash = "#/"; },
     onSave: async (matchday, scores, replacing) => {
-      if (replacing && !(await confirmDialog(`La jornada ${matchday.jornada} ya existe. ¿Reemplazarla?`, "Reemplazar"))) return;
+      if (replacing && !(await confirmDialog(t("confirmReplace", { n: matchday.jornada }), t("replace")))) return;
       const data = await withPin((pin) => api.upsertMatchday(pin, matchday, scores));
       if (!data) return;
       applyWrite(data);
       location.hash = "#/";
-      toast(`Jornada ${matchday.jornada} guardada`);
+      toast(t("saved", { n: matchday.jornada }));
     },
     onDelete: async (n) => {
-      if (!(await confirmDialog(`¿Borrar la jornada ${n} y todos sus puntos? No se puede deshacer.`, "Borrar"))) return;
+      if (!(await confirmDialog(t("confirmDelete", { n }), t("delete")))) return;
       const data = await withPin((pin) => api.deleteMatchday(pin, state.data.season, n));
       if (!data) return;
       applyWrite(data);
       location.hash = "#/";
-      toast(`Jornada ${n} borrada`);
+      toast(t("deleted", { n }));
     },
   });
-  window.scrollTo(0, 0);
+  openFormState = form ? { jornada, form } : null;
+  if (!draft) window.scrollTo(0, 0);
 }
 
 function showHistory() {
@@ -328,20 +333,22 @@ function showHistory() {
     const goals = md.home_away === "away" ? [md.rival_goals, md.barca_goals] : [md.barca_goals, md.rival_goals];
     const title = md.rival
       ? `${escapeHtml(teams[0])} ${hasScore ? `${goals[0]}-${goals[1]}` : "vs"} ${escapeHtml(teams[1])}`
-      : "Sin partido";
-    const best = top.names.length ? `Máx.: ${top.names.map(escapeHtml).join(", ")} (${top.points > 0 ? "+" : ""}${top.points})` : "Sin puntos";
-    return `<li><a href="#/jornada/${md.jornada}" aria-label="Editar jornada ${md.jornada}">
+      : t("noMatch");
+    const best = top.names.length
+      ? t("best", { names: top.names.map(escapeHtml).join(", "), pts: `${top.points > 0 ? "+" : ""}${top.points}` })
+      : t("noPoints");
+    return `<li><a href="#/jornada/${md.jornada}" aria-label="${t("editMatchday", { n: md.jornada })}">
       <span class="j">J<b>${md.jornada}</b></span>
-      <span class="rival">${title}${md.type === "adjustment" ? `<span class="tag">Ajuste</span>` : ""}</span>
+      <span class="rival">${title}${md.type === "adjustment" ? `<span class="tag">${t("adjustmentTag")}</span>` : ""}</span>
       ${md.dice ? dieSvg(md.dice, { style: "white" }) : "<span></span>"}
       <span class="meta">${md.date ? formatDate(md.date) + " · " : ""}${best}</span>
     </a></li>`;
   }).join("");
   view.innerHTML = `
     ${statusLine()}
-    <h2>Historial <span>T${escapeHtml(data.season)}</span></h2>
-    ${items ? `<ul class="history">${items}</ul>` : `<p style="color:var(--muted)">Todavía no hay jornadas.</p>`}
-    <div class="actions"><a class="btn btn-primary" href="#/jornada/new">Nueva jornada</a><a class="btn" href="#/">Clasificación</a></div>`;
+    <h2>${t("history")} <span>T${escapeHtml(data.season)}</span></h2>
+    ${items ? `<ul class="history">${items}</ul>` : `<p style="color:var(--muted)">${t("noMatchdays")}</p>`}
+    <div class="actions"><a class="btn btn-primary" href="#/jornada/new">${t("newMatchday")}</a><a class="btn" href="#/">${t("standings")}</a></div>`;
   bindStatus();
 }
 
@@ -357,10 +364,10 @@ function toast(message, isError = false) {
   toastTimer = setTimeout(() => { el.hidden = true; }, 3500);
 }
 
-const relative = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
 function timeAgo(at) {
+  const relative = new Intl.RelativeTimeFormat(getLang(), { numeric: "auto" });
   const s = Math.round((Date.now() - at) / 1000);
-  if (s < 45) return "ahora mismo";
+  if (s < 45) return t("justNow");
   if (s < 3600) return relative.format(-Math.round(s / 60), "minute");
   if (s < 86400) return relative.format(-Math.round(s / 3600), "hour");
   return relative.format(-Math.round(s / 86400), "day");
@@ -369,13 +376,35 @@ function timeAgo(at) {
 function formatDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   if (!y || !m || !d) return iso;
-  return new Date(y, m - 1, d).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  return new Date(y, m - 1, d).toLocaleDateString(locale(), { day: "numeric", month: "short" });
 }
+
+// ---------------------------------------------------------------- language
+
+/** Translates the static page (index.html) and marks the active flag. */
+function applyLanguage() {
+  document.documentElement.lang = getLang();
+  document.title = t("docTitle") + (api.isMock ? " (mock)" : "");
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === getLang())));
+  renderSeasons();
+}
+
+document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => {
+  if (button.dataset.lang === getLang() || !LANGS.includes(button.dataset.lang)) return;
+  setLang(button.dataset.lang);
+  applyLanguage();
+  // Keep a form being filled in: render it again in the new language with what was typed.
+  const form = view.querySelector("form") && openFormState;
+  if (form) showForm(form.jornada, form.form.draft());
+  else route();
+}));
 
 // ---------------------------------------------------------------- start
 
 window.addEventListener("hashchange", route);
 window.addEventListener("resize", () => refit?.());
-if (api.isMock) document.title += " (mock)";
+applyLanguage();
 await loadCrest();
 load();
