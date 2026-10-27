@@ -71,4 +71,5 @@ Change the rule there, update its test in [tests/standings.test.js](tests/standi
 | `js/normas.js` | The league's rules, shown in the *Normas* tab, in Spanish and Catalan |
 | `js/app.js` | Routing (`#/`, `#/jornada/new`, `#/jornada/{n}`, `#/historial`, `#/normas`), cache, PIN |
 | `assets/crest.svg` | League crest |
+| `assets/*.png`, `assets/og-image.jpg`, `manifest.webmanifest` | Icons and the link preview, made from the crest and `tools/share-image.html` by `node tools/render-images.cjs` (needs Playwright) |
 | `code.gs` | The Apps Script backend |
