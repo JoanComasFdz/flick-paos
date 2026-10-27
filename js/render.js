@@ -1,7 +1,7 @@
 // View model (standings.js) → DOM for the 1080×1620 scoreboard card.
 
 import {
-  escapeHtml, dieSvg, bigRedDieSvg, trophySvg, calendarSvg, ribbonSvg, teamBadgeSvg,
+  escapeHtml, dieSvg, bigRedDieSvg, extraDieSvg, trophySvg, calendarSvg, ribbonSvg, teamBadgeSvg,
 } from "./icons.js";
 
 export const CARD_WIDTH = 1080;
@@ -99,7 +99,7 @@ function diceBox(face) {
 
 function tableRow(r) {
   const trophies = Array.from({ length: r.titles }, () => trophySvg("c-trophy")).join("");
-  const dice = Array.from({ length: r.extraDice }, () => dieSvg(0, { style: "ivory", className: "c-extra-die" })).join("");
+  const dice = Array.from({ length: r.extraDice }, () => extraDieSvg("c-extra-die")).join("");
   return `<div class="c-row${r.leader ? " is-leader" : ""}">
     <div class="c-pos">${r.pos}</div>
     <div class="c-name"><span class="c-name-text">${escapeHtml(r.name)}</span>${trophies}</div>

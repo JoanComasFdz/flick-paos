@@ -337,7 +337,7 @@ dialog .dialog-actions .btn { flex: 1; }
 .c-row .c-pts { color: var(--gold); font-size: calc(var(--row-font) * 1.1); font-weight: 700; }
 .c-row .c-casa.is-positive { color: var(--green-text); }
 .c-row .c-extra { gap: 6px; }
-.c-extra-die { width: calc(var(--row-font) * 1.05); height: calc(var(--row-font) * 1.05); flex: none; }
+.c-extra-die { width: calc(var(--row-font) * 1.2); height: calc(var(--row-font) * 1.2); flex: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
 .c-row.is-leader {
   background: linear-gradient(90deg, #2E7D32, #3C9A41 60%, #2E7D32);
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.12);
@@ -364,7 +364,9 @@ dialog .dialog-actions .btn { flex: 1; }
 .c-face-num { color: var(--gold); font-size: 32px; font-weight: 700; line-height: 1; }
 .c-face-die { width: 84px; height: 84px; filter: drop-shadow(0 4px 5px rgba(0,0,0,.55)); }
 .c-face-count { font-size: 52px; font-weight: 700; line-height: 1; }
-.c-face.is-last .c-face-count { color: var(--green-text); }
+/* the face rolled in the last match */
+.c-face.is-last { background: rgba(46,125,50,.3); box-shadow: inset 0 0 0 3px var(--green-text); }
+.c-face.is-last .c-face-num, .c-face.is-last .c-face-count { color: var(--green-text); }
 
 /* footer */
 .c-footer { flex: none; height: 64px; margin-top: 14px; position: relative; display: flex; align-items: center; justify-content: center; }
