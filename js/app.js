@@ -413,8 +413,11 @@ function formatDate(iso) {
 function applyLanguage() {
   document.documentElement.lang = getLang();
   document.title = t("docTitle") + (api.isMock ? " (mock)" : "");
-  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
-  document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+  // A text missing from i18n.js (a phone still holding an older copy after an
+  // update) keeps the page's own Spanish text instead of showing its key.
+  const has = (key) => t(key) !== key;
+  document.querySelectorAll("[data-i18n]").forEach((el) => { if (has(el.dataset.i18n)) el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => { if (has(el.dataset.i18nHtml)) el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === getLang())));
   document.querySelector("nav.tabs").setAttribute("aria-label", t("sections"));
   renderSeasons();
