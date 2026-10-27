@@ -320,8 +320,7 @@ function showForm(jornada, draft) {
     jornada,
     draft,
     onCancel: () => { location.hash = "#/"; },
-    onSave: async (matchday, scores, replacing) => {
-      if (replacing && !(await confirmDialog(t("confirmReplace", { n: matchday.jornada }), t("replace")))) return;
+    onSave: async (matchday, scores) => {
       const data = await withPin((pin) => api.upsertMatchday(pin, matchday, scores));
       if (!data) return;
       applyWrite(data);

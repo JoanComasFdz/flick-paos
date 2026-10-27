@@ -248,6 +248,12 @@ input[type="number"].input { text-align: center; }
 .mini-dice b { color: var(--white); margin-left: 2px; }
 
 .hint { color: var(--muted); font-size: 13px; margin: -4px 0 12px; }
+.exists-notice {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 12px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(179,18,31,.25); border: 1px solid #B3121F; font-weight: 600;
+}
+.exists-notice[hidden] { display: none; }
 
 .form-error { color: #FF8A94; font-weight: 600; margin: 0 0 12px; }
 
