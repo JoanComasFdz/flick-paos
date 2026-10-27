@@ -21,7 +21,6 @@ The scorekeeper uses a phone. Mobile-first.
 - Third-party JS only from a CDN (jsDelivr/cdnjs/unpkg), pinned to a version. Needed: one DOM-to-image library (e.g. `html-to-image`) for the PNG export.
 - Fonts: Google Fonts only (suggestion: *Oswald* or *Bebas Neue* for condensed headings/numbers, *Permanent Marker* or similar brush font for the "FLICK-PAOS" title).
 - **Never embed secrets.** The only configuration is the Apps Script URL in `config.js`. The PIN is typed by the user.
-- **No official club crests or trademarked logos.** Use original artwork: an SVG league crest (shield + trophy + ball), and generic team badges (circle/shield in club colours with initials, e.g. "FCB", "ATH", "RMA").
 - All UI text in **Spanish** (the group's language). Code and comments in English.
 - Works in current Safari iOS and Chrome Android.
 
