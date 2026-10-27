@@ -28,6 +28,8 @@ const STRINGS = {
     // PIN and dialogs
     pinText: "Introduce el PIN del grupo para añadir o editar jornadas.",
     wrongPin: "PIN incorrecto. Prueba otra vez.",
+    logout: "Cerrar sesión",
+    loggedOut: "Sesión cerrada: se pedirá el PIN la próxima vez.",
     checkingPin: "Comprobando el PIN…",
     cancel: "Cancelar",
     accept: "Aceptar",
@@ -147,6 +149,8 @@ const STRINGS = {
     cardDescription: "Classificació de la temporada {season} després de {n} jornades: {top}",
     pinText: "Introdueix el PIN del grup per afegir o editar jornades.",
     wrongPin: "PIN incorrecte. Torna-ho a provar.",
+    logout: "Tanca la sessió",
+    loggedOut: "Sessió tancada: es demanarà el PIN la propera vegada.",
     checkingPin: "Comprovant el PIN…",
     cancel: "Cancel·la",
     accept: "D'acord",

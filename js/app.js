@@ -231,8 +231,18 @@ function statusLine() {
   return `<div class="status">${age}${retry}</div>`;
 }
 
+/** "Cerrar sesión": only while this phone remembers the PIN. */
+function logoutButton() {
+  return storage.get(PIN_KEY) ? `<button type="button" class="logout">${t("logout")}</button>` : "";
+}
+
 function bindStatus() {
   view.querySelector(".status .retry")?.addEventListener("click", () => load());
+  view.querySelector(".logout")?.addEventListener("click", (e) => {
+    storage.remove(PIN_KEY);
+    e.currentTarget.remove();
+    toast(t("loggedOut"));
+  });
   ageTimer = setInterval(() => {
     const el = view.querySelector(".status .age");
     if (el && !state.loading) el.textContent = t("updated", { ago: timeAgo(state.fetchedAt) });
@@ -250,7 +260,8 @@ function showScoreboard() {
       <button type="button" class="btn btn-primary download ${shareSupported ? "" : "wide"}">${t("download")}</button>
       ${shareSupported ? `<button type="button" class="btn btn-garnet share">${t("share")}</button>` : ""}
       <a class="btn wide" href="#/jornada/new">${t("newMatchday")}</a>
-    </div>`;
+    </div>
+    ${logoutButton()}`;
   bindStatus();
   refit = mountScaled(view.querySelector(".card-host"), renderCard(vm));
 
@@ -364,7 +375,8 @@ function showHistory() {
     ${statusLine()}
     <h2>${t("history")} <span>T${escapeHtml(data.season)}</span></h2>
     ${items ? `<ul class="history">${items}</ul>` : `<p style="color:var(--muted)">${t("noMatchdays")}</p>`}
-    <div class="actions"><a class="btn btn-primary wide" href="#/jornada/new">${t("newMatchday")}</a></div>`;
+    <div class="actions"><a class="btn btn-primary wide" href="#/jornada/new">${t("newMatchday")}</a></div>
+    ${logoutButton()}`;
   bindStatus();
 }
 
