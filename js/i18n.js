@@ -4,6 +4,8 @@ const STRINGS = {
   es: {
     // page
     docTitle: "La Liga de los Flick-Paos",
+    disclaimer: "Aviso legal: este es un proyecto de aficionados, sin ánimo de lucro, hecho por y para un grupo de 10 amigos. No somos titulares de ninguno de los nombres, escudos, marcas ni personajes que aparecen aquí (FC Barcelona, el resto de clubes, las competiciones, «Campeones: Oliver y Benji»…), que pertenecen a sus respectivos propietarios. Los escudos son dibujos propios inspirados en los colores de cada club. No hay dinero de por medio de ningún tipo: ni apuestas, ni publicidad, ni ventas.",
+    credit: "Hecho por Joan Comas, octubre de 2026",
     appTitle: "Liga de los <span>Flick-Paos</span>",
     season: "Temporada",
     seasonOption: "Temporada {s}",
@@ -130,6 +132,8 @@ const STRINGS = {
   },
   ca: {
     docTitle: "La Lliga dels Flick-Paos",
+    disclaimer: "Avís legal: aquest és un projecte d'afeccionats, sense ànim de lucre, fet per i per a un grup de 10 amics. No som titulars de cap dels noms, escuts, marques ni personatges que hi apareixen (FC Barcelona, la resta de clubs, les competicions, «Campions: Oliver i Benji»…), que pertanyen als seus respectius propietaris. Els escuts són dibuixos propis inspirats en els colors de cada club. No hi ha diners pel mig de cap mena: ni apostes, ni publicitat, ni vendes.",
+    credit: "Fet per Joan Comas, octubre de 2026",
     appTitle: "Lliga dels <span>Flick-Paos</span>",
     season: "Temporada",
     seasonOption: "Temporada {s}",
