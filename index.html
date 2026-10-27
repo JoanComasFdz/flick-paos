@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0B1730">
+  <meta name="description" content="Clasificación de la Liga de los Flick-Paos">
+  <title>La Liga de los Flick-Paos</title>
+  <link rel="icon" href="assets/crest.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" crossorigin="anonymous"
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Permanent+Marker&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/+esm" crossorigin>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <img class="topbar-crest" src="assets/crest.svg" alt="">
+    <a class="topbar-title" href="#/">Liga de los <span>Flick-Paos</span></a>
+    <label for="season" class="visually-hidden" hidden>Temporada</label>
+    <select id="season" hidden></select>
+  </header>
+
+  <main id="view" aria-live="polite">
+    <div class="loading" role="status"><div class="spinner"></div><p>Cargando la liga…</p></div>
+  </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <dialog id="pin-dialog" aria-labelledby="pin-title">
+    <form method="dialog">
+      <h2 id="pin-title">PIN</h2>
+      <p>Introduce el PIN del grupo para guardar los cambios.</p>
+      <p class="pin-error form-error" role="alert" hidden></p>
+      <label for="pin-input" class="visually-hidden">PIN</label>
+      <input id="pin-input" class="input" type="password" inputmode="numeric" autocomplete="off" required>
+      <div class="dialog-actions">
+        <button class="btn" value="cancel" formnovalidate>Cancelar</button>
+        <button class="btn btn-primary" value="ok">Aceptar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <p></p>
+      <div class="dialog-actions">
+        <button class="btn" value="cancel">Cancelar</button>
+        <button class="btn btn-danger" value="ok">Aceptar</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
