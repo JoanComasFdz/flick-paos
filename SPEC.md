@@ -166,9 +166,10 @@ Single page, hash routing:
 
 - `#/` **Scoreboard** (default): rendered card + buttons: **Descargar imagen**, **Compartir** (Web Share API with the PNG file when `navigator.canShare({files})`; hide otherwise), **Nueva jornada**, **Historial**. Season selector if more than one season.
 - `#/jornada/new` and `#/jornada/{n}` **Matchday form**:
-  - Fields: Jornada (pre-filled with last + 1), Fecha (date, default today), Tipo (Partido / Ajuste — Ajuste hidden behind an "Avanzado" toggle), Rival (free text with datalist of previous rivals), Casa/Fuera, goles Barça, goles rival, Dado (six big tappable die buttons).
+  - Fields: Jornada (pre-filled with last + 1), Fecha (date, default today), Tipo (Partido / Totales acumulados — the latter is an `adjustment`, hidden behind an "Avanzado" toggle), Rival (free text with datalist of previous rivals), Casa/Fuera, goles Barça, goles rival, Dado (six big tappable die buttons).
   - One row per active player: name, points (numeric stepper with − / + buttons, default 0, allow negative), casa (toggle or stepper, per rules), dado extra (0–3 segmented).
-  - For Ajuste: hide match fields, show six "veces que ha salido" inputs.
+  - For Totales acumulados: match fields optional, show six "veces que ha salido" inputs and each player's extra dice won.
+  - A new matchday whose number already exists can't be saved: the form says so and links to editing that jornada.
   - **Live preview**: a mini version of the resulting standings updates as you type.
   - Save → if no PIN stored, prompt for it (validate with `checkPin`), store it in `localStorage` (wrapped in try/catch). On `Wrong PIN`, clear the stored PIN and prompt again.
   - On success: navigate to `#/` with the new data and a toast "Jornada {n} guardada".

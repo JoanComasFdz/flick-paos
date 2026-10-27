@@ -35,9 +35,9 @@ node --test
 
 To fix a matchday: **Historial** → tap it → change it and save, or **Borrar jornada**.
 
-### Starting from an existing table (Ajuste)
+### Starting from an existing table (Totales acumulados)
 
-To start from totals instead of the full history (e.g. the table after jornada 14), tap **Avanzado** → **Ajuste**: enter each player's *total* points and casa, the extra dice each one has won (with their faces), and how many times each die face has come out. The match fields are optional and only show in the header; an adjustment never counts as a die roll. Matches added after it add on top.
+To start from totals instead of the full history (e.g. the table after jornada 14), tap **Avanzado** → **Totales acumulados**: enter each player's *total* points and casa, the extra dice each one has won (with their faces), and how many times each die face has come out. The match fields are optional and only show in the header; it never counts as a die roll. Matches added after it add on top. To correct it later, open it from **Historial**: **Nueva jornada** never overwrites a jornada that already exists, it offers to edit it instead.
 
 ## Changing the rules
 

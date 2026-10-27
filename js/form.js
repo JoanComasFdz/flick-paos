@@ -12,7 +12,7 @@ import { t } from "./i18n.js";
 /**
  * @param {HTMLElement} root
  * @param {{data: object, jornada: number|null,
- *          onSave: (matchday: object, scores: object[], replacing: boolean) => Promise<void>,
+ *          onSave: (matchday: object, scores: object[]) => Promise<void>,
  *          onDelete: (jornada: number) => Promise<void>,
  *          onCancel: () => void, draft?: object}} options
  *   `draft` restores a form being filled in (after a language change).
@@ -47,6 +47,10 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
             <input id="f-date" class="input" type="date" value="${escapeHtml(state.date)}">
           </div>
         </div>
+        <p class="exists-notice" hidden>
+          <span></span>
+          <a class="btn btn-small" href="#/"></a>
+        </p>
         <button type="button" class="toggle-advanced" aria-expanded="${state.type === "adjustment"}">${t("advanced")}</button>
         <div class="field advanced" ${state.type === "adjustment" ? "" : "hidden"}>
           <span class="label" id="f-type-label">${t("type")}</span>
@@ -54,6 +58,7 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
             <button type="button" data-value="match">${t("match")}</button>
             <button type="button" data-value="adjustment">${t("adjustment")}</button>
           </div>
+          <p class="hint adjustment-only" style="margin:4px 0 0">${t("totalsHint")}</p>
         </div>
       </div>
 
@@ -169,6 +174,16 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
     $(".extra-face-field").hidden = !state.extra.player;
     $(".match-title").textContent = t(adjustment ? "matchOptional" : "match");
     $(".players-title").textContent = t(adjustment ? "playersTotals" : "playersPoints");
+    // A new matchday never overwrites an existing one: it points to it instead.
+    const exists = !editing && data.matchdays.some((m) => m.jornada === state.jornada);
+    const notice = $(".exists-notice");
+    notice.hidden = !exists;
+    if (exists) {
+      notice.querySelector("span").textContent = t("existsNotice", { n: state.jornada });
+      const link = notice.querySelector("a");
+      link.textContent = t("openExisting", { n: state.jornada });
+      link.href = `#/jornada/${state.jornada}`;
+    }
     $(".preview").innerHTML = renderMiniTable(computeStandings(withMatchday(data, ...build())));
   }
 
@@ -200,6 +215,7 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
 
   function validate() {
     if (!Number.isInteger(state.jornada) || state.jornada < 1) return t("errJornada");
+    if (!editing && data.matchdays.some((m) => m.jornada === state.jornada)) return t("existsNotice", { n: state.jornada });
     if (state.type === "match") {
       if (!state.rival.trim()) return t("errRival");
       if (!isDieFace(state.dice)) return t("errDice");
@@ -288,12 +304,11 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, dr
     const problem = validate();
     showError(problem);
     if (problem) return;
-    const replacing = !editing && data.matchdays.some((m) => m.jornada === state.jornada);
     const save = $(".save");
     save.disabled = true;
     save.textContent = t("saving");
     try {
-      await onSave(...build(), replacing);
+      await onSave(...build());
     } catch (err) {
       showError(err.message);
     } finally {
