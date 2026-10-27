@@ -112,6 +112,8 @@ const SHIELD = "M50 4 C66 10 82 10 96 6 V58 C96 88 76 104 50 114 C24 104 4 88 4 
 /** A club-coloured shield with the club's initials. */
 export function teamBadgeSvg(name, isBarca, className = "") {
   if (isBarca) return barcaBadgeSvg(className);
+  const custom = CUSTOM_BADGES[findTeam(name)?.badge];
+  if (custom) return custom(className);
   const t = teamStyle(name);
   const clip = nextId("badge");
   const stripes = t.colors.length > 1
@@ -134,6 +136,30 @@ function contrastOn(hex) {
   const v = parseInt(m[1], 16);
   const lum = 0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
   return lum > 150 ? "#111111" : "#FFFFFF";
+}
+
+const CUSTOM_BADGES = { newTeam: newTeamBadgeSvg };
+
+/** New Team (Oliver y Benji): a green circle with a yellow band, cut into an N. */
+function newTeamBadgeSvg(className) {
+  const mask = nextId("nt-mask");
+  const clip = nextId("nt-clip");
+  // The two notches that shape the N, and the edges of the N inside the circle.
+  const notches = "M37 6 H64 V59 Z M38.5 57 L66 112 H38.5 Z";
+  const edges = "M37.5 8 L63.5 59 V6 M38.5 112 V57 L66 112";
+  return `<svg class="badge ${className}" viewBox="0 0 100 118" aria-hidden="true">
+    <defs>
+      <mask id="${mask}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="118">
+        <rect width="100" height="118" fill="#fff"/><path d="${notches}" fill="#000"/>
+      </mask>
+      <clipPath id="${clip}"><circle cx="50" cy="59" r="44"/></clipPath>
+    </defs>
+    <g mask="url(#${mask})">
+      <circle cx="50" cy="59" r="44" fill="#009245" stroke="#111" stroke-width="4"/>
+      <rect x="0" y="47.5" width="100" height="17" fill="#FFF200" clip-path="url(#${clip})"/>
+    </g>
+    <path d="${edges}" fill="none" stroke="#111" stroke-width="4" stroke-linejoin="round" clip-path="url(#${clip})"/>
+  </svg>`;
 }
 
 function barcaBadgeSvg(className) {

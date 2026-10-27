@@ -6,6 +6,7 @@
 // name:    shown and saved as the rival (Spanish).
 // aliases: other names the search and the badge lookup recognise.
 // code, colors, text, accent: the badge (one colour = plain, two = stripes).
+// badge: the name of a hand-drawn badge in icons.js, instead of the generated one.
 
 export const COMPETITIONS = [
   { id: "laliga", label: "LaLiga 2026-27" },
@@ -70,7 +71,7 @@ export const TEAMS = [
   { name: "Viking", aliases: ["viking fk"], comps: ["ucl"], code: "VIK", colors: ["#002F6C"], text: "#FFFFFF", accent: "#FFFFFF" },
 
   // Easter egg.
-  { name: "New Team", aliases: ["oliver y benji", "oliver", "benji", "campeones", "captain tsubasa", "tsubasa", "nankatsu"], comps: ["cartoon"], code: "NT", colors: ["#FFFFFF", "#1E5BB8"], text: "#FFFFFF", accent: "#E4002B" },
+  { name: "New Team", aliases: ["oliver y benji", "oliver", "benji", "campeones", "captain tsubasa", "tsubasa", "nankatsu"], comps: ["cartoon"], code: "NT", badge: "newTeam" },
 
   // Badges only: past or possible rivals not in a 2026-27 list.
   { name: "Girona", aliases: [], comps: [], code: "GIR", colors: ["#CD2534", "#FFFFFF"], text: "#FFFFFF", accent: "#CD2534" },
