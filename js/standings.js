@@ -23,6 +23,7 @@ export function computeStandings(data, options = {}) {
       points: rules.totalPoints(own),
       casa: rules.casaTotal(own),
       extraDice: rules.currentExtraDice(own),
+      extraDiceFaces: rules.currentExtraDiceFaces(own),
     };
   });
 

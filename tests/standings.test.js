@@ -131,7 +131,7 @@ test("inactive players are excluded", () => {
 test("a player with no score rows shows 0", () => {
   const vm = computeStandings(league([player("a"), player("b")], [match(1, 1)], [score(1, "a", 3, 1, 1)]));
   assert.deepEqual(vm.rows[1], {
-    player_id: "b", name: "b", titles: 0, points: 0, casa: 0, extraDice: 0, pos: 2, leader: false, casaHighlighted: false,
+    player_id: "b", name: "b", titles: 0, points: 0, casa: 0, extraDice: 0, extraDiceFaces: [], pos: 2, leader: false, casaHighlighted: false,
   });
 });
 
@@ -174,4 +174,25 @@ test("withMatchday replaces the matchday and its scores", () => {
   assert.deepEqual(next.matchdays.map((m) => [m.jornada, m.dice]), [[1, 1], [2, 6]]);
   assert.equal(computeStandings(next).rows[0].points, 6);
   assert.equal(data.scores.length, 2, "input is not mutated");
+});
+
+test("DADO EXTRA faces come from the latest matchday, one per extra die", () => {
+  const withFaces = (s, faces) => ({ ...s, extra_dice_faces: faces });
+  const vm = computeStandings(league(
+    [player("a"), player("b"), player("c"), player("d")],
+    [match(1, 1), match(2, 2)],
+    [withFaces(score(1, "a", 0, 0, 1), [6]), withFaces(score(2, "a", 0, 0, 2), [4, 2]),
+     withFaces(score(2, "b", 0, 0, 2), [5]),
+     score(2, "c", 0, 0, 1),
+     withFaces(score(2, "d", 0, 0, 0), [3])],
+  ));
+  const faces = Object.fromEntries(vm.rows.map((r) => [r.name, r.extraDiceFaces]));
+  assert.deepEqual(faces, { a: [4, 2], b: [5, 0], c: [0], d: [] });
+});
+
+test("DADO EXTRA faces are capped with the dice and ignore invalid values", () => {
+  const vm = computeStandings(league(
+    [player("a")], [match(1, 1)], [{ ...score(1, "a", 0, 0, 5), extra_dice_faces: [1, 9, 3, 4, 5] }],
+  ));
+  assert.deepEqual(vm.rows[0].extraDiceFaces, [1, 0, 3]);
 });

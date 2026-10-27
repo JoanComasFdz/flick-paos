@@ -133,6 +133,10 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
     form.querySelectorAll("[data-extra]").forEach((b) => {
       b.setAttribute("aria-pressed", String(Number(b.dataset.value) === state.scores[b.dataset.extra].extra_dice));
     });
+    form.querySelectorAll("[data-face]").forEach((b) => {
+      const faces = state.scores[b.dataset.face].extra_dice_faces;
+      b.setAttribute("aria-pressed", String(faces[Number(b.dataset.index)] === Number(b.dataset.value)));
+    });
     const adjustment = state.type === "adjustment";
     form.querySelectorAll(".adjustment-only").forEach((el) => (el.hidden = !adjustment));
     $(".match-title").textContent = adjustment ? "Partido (opcional)" : "Partido";
@@ -167,6 +171,8 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
       if (!state.rival.trim()) return "Falta el rival.";
       if (!isDieFace(state.dice)) return "Elige el número del dado.";
     }
+    const missingFace = players.find((p) => state.scores[p.player_id].extra_dice_faces.some((f) => !isDieFace(f)));
+    if (missingFace) return `Elige la cara de cada dado extra de ${missingFace.name}.`;
     if (state.type === "adjustment" && state.dice_counts.some((c) => !Number.isInteger(c) || c < 0)) {
       return "Las veces que ha salido cada cara deben ser números enteros.";
     }
@@ -195,7 +201,13 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
       // In an adjustment the dice is optional: tapping it again clears it.
       state.dice = state.dice === n && state.type === "adjustment" ? null : n;
     } else if (btn.dataset.extra) {
-      state.scores[btn.dataset.extra].extra_dice = Number(btn.dataset.value);
+      const score = state.scores[btn.dataset.extra];
+      score.extra_dice = Number(btn.dataset.value);
+      score.extra_dice_faces = Array.from({ length: score.extra_dice }, (_, i) => score.extra_dice_faces[i] ?? null);
+      form.querySelector(`.extra-faces[data-player="${btn.dataset.extra}"]`).innerHTML =
+        facePickers(players.find((p) => p.player_id === btn.dataset.extra), score);
+    } else if (btn.dataset.face) {
+      state.scores[btn.dataset.face].extra_dice_faces[Number(btn.dataset.index)] = Number(btn.dataset.value);
     } else if (btn.dataset.step) {
       const input = btn.parentElement.querySelector("input");
       const min = input.min === "" ? -Infinity : Number(input.min);
@@ -278,9 +290,11 @@ function initialState(data, players, existing) {
   for (const p of players) {
     const row = existing && data.scores.find((s) => s.jornada === existing.jornada && s.player_id === p.player_id);
     scores[p.player_id] = row
-      ? { points: row.points, casa: row.casa, extra_dice: row.extra_dice }
-      // A new matchday keeps each player's current dado extra unless changed.
-      : { points: 0, casa: 0, extra_dice: holding[p.player_id] ?? 0 };
+      ? { points: row.points, casa: row.casa, extra_dice: row.extra_dice, extra_dice_faces: facesOf(row) }
+      // A new matchday keeps each player's number of extra dice; they're rolled again, so no faces yet.
+      : { points: 0, casa: 0, extra_dice: holding[p.player_id] ?? 0, extra_dice_faces: [] };
+    const s = scores[p.player_id];
+    s.extra_dice_faces = Array.from({ length: s.extra_dice }, (_, i) => s.extra_dice_faces[i] ?? null);
   }
 
   if (!existing) {
@@ -326,7 +340,24 @@ function playerRow(p, s) {
       <div><span class="mini-label" id="x-${p.player_id}">Dado extra</span>
         <div class="seg" role="group" aria-labelledby="x-${p.player_id}">${extra}</div></div>
     </div>
+    <div class="extra-faces" data-player="${p.player_id}">${facePickers(p, s)}</div>
   </div>`;
+}
+
+/** One row of six die buttons per extra die, to enter the face it rolled. */
+function facePickers(p, s) {
+  return s.extra_dice_faces.map((_, i) => `
+    <div class="extra-face" role="group" aria-label="Cara del dado extra ${i + 1} de ${escapeHtml(p.name)}">
+      <span class="mini-label">Dado extra ${i + 1}</span>
+      <div class="dice-picker dice-picker-small">
+        ${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" data-face="${p.player_id}" data-index="${i}" data-value="${n}"
+          aria-label="${n}">${dieSvg(n, { style: "ivory" })}</button>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+function facesOf(row) {
+  return Array.isArray(row.extra_dice_faces) ? row.extra_dice_faces.map((f) => (isDieFace(f) ? f : null)) : [];
 }
 
 function today() {

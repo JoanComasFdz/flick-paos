@@ -1,7 +1,7 @@
 // View model (standings.js) → DOM for the 1080×1620 scoreboard card.
 
 import {
-  escapeHtml, dieSvg, bigRedDieSvg, extraDieSvg, trophySvg, calendarSvg, ribbonSvg, teamBadgeSvg,
+  escapeHtml, dieSvg, bigRedDieSvg, trophySvg, calendarSvg, ribbonSvg, teamBadgeSvg,
 } from "./icons.js";
 
 export const CARD_WIDTH = 1080;
@@ -99,7 +99,7 @@ function diceBox(face) {
 
 function tableRow(r) {
   const trophies = Array.from({ length: r.titles }, () => trophySvg("c-trophy")).join("");
-  const dice = Array.from({ length: r.extraDice }, () => extraDieSvg("c-extra-die")).join("");
+  const dice = r.extraDiceFaces.map((face) => dieSvg(face, { style: "ivory", className: "c-extra-die" })).join("");
   return `<div class="c-row${r.leader ? " is-leader" : ""}">
     <div class="c-pos">${r.pos}</div>
     <div class="c-name"><span class="c-name-text">${escapeHtml(r.name)}</span>${trophies}</div>
@@ -139,7 +139,7 @@ export function renderMiniTable(vm) {
   const rows = vm.rows.map((r) => `
     <tr class="${r.leader ? "is-leader" : ""}">
       <td>${r.pos}</td><td>${escapeHtml(r.name)}</td><td class="num">${r.points}</td>
-      <td class="num">${r.casa}</td><td class="num">${r.extraDice || ""}</td>
+      <td class="num">${r.casa}</td><td class="num">${r.extraDiceFaces.map((f) => f || "?").join(" ")}</td>
     </tr>`).join("");
   return `<table class="mini">
     <thead><tr><th>Pos.</th><th>Jugador</th><th class="num">Puntos</th><th class="num">Casa</th><th class="num">Dado extra</th></tr></thead>

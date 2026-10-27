@@ -20,6 +20,7 @@ const PIPS = {
 const DIE_STYLES = {
   white: { face: "#FFFFFF", edge: "#C9CED8", pip: "#111827", shine: "#FFFFFF" },
   red: { face: "#D7192B", edge: "#8E0E1A", pip: "#FFFFFF", shine: "#FF6B76" },
+  ivory: { face: "#F4E7CC", edge: "#B79F74", pip: "#5B4630", shine: "#FFF8E8" },
 };
 
 /** A die face. `face` 0 draws a blank die. */
@@ -37,7 +38,10 @@ export function dieSvg(face, { style = "white", className = "" } = {}) {
 /** A tilted 3D-looking red die for headings. */
 export function bigRedDieSvg(className = "") {
   return `<svg class="${className}" viewBox="0 0 120 120" aria-hidden="true">
-    ${dieBody("#8E0E1A", "#E8303F", "#C4142A", "#A80F20")}
+    <path d="M60 6 L110 30 L104 88 L56 114 L12 86 L12 30 Z" fill="#8E0E1A"/>
+    <path d="M60 6 L110 30 L62 52 L12 30 Z" fill="#E8303F"/>
+    <path d="M12 30 L62 52 L56 114 L12 86 Z" fill="#C4142A"/>
+    <path d="M62 52 L110 30 L104 88 L56 114 Z" fill="#A80F20"/>
     <g fill="#FFFFFF">
       <ellipse cx="60" cy="29" rx="7" ry="4"/>
       <ellipse cx="24" cy="48" rx="4" ry="6"/><ellipse cx="36" cy="66" rx="4" ry="6"/><ellipse cx="48" cy="84" rx="4" ry="6"/>
@@ -46,25 +50,6 @@ export function bigRedDieSvg(className = "") {
       <ellipse cx="72" cy="90" rx="4" ry="6"/><ellipse cx="90" cy="80" rx="4" ry="6"/>
     </g>
   </svg>`;
-}
-
-/** A small tilted ivory die (one "dado extra"), with big pips so it reads as a die at row size. */
-export function extraDieSvg(className = "") {
-  return `<svg class="${className}" viewBox="0 0 120 120" aria-hidden="true">
-    ${dieBody("#8C7550", "#FFF6E0", "#E9D7B0", "#D6C094")}
-    <g fill="#5B4630">
-      <ellipse cx="60" cy="29" rx="11" ry="7"/>
-      <ellipse cx="26" cy="52" rx="6.5" ry="9"/><ellipse cx="46" cy="86" rx="6.5" ry="9"/>
-      <ellipse cx="94" cy="44" rx="6.5" ry="9"/><ellipse cx="83" cy="69" rx="6.5" ry="9"/><ellipse cx="72" cy="94" rx="6.5" ry="9"/>
-    </g>
-  </svg>`;
-}
-
-function dieBody(edge, top, left, right) {
-  return `<path d="M60 6 L110 30 L104 88 L56 114 L12 86 L12 30 Z" fill="${edge}"/>
-    <path d="M60 6 L110 30 L62 52 L12 30 Z" fill="${top}"/>
-    <path d="M12 30 L62 52 L56 114 L12 86 Z" fill="${left}"/>
-    <path d="M62 52 L110 30 L104 88 L56 114 Z" fill="${right}"/>`;
 }
 
 export function trophySvg(className = "") {

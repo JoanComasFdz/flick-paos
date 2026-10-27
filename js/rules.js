@@ -31,9 +31,23 @@ export function isCasaHighlighted(casa) {
  * for the player. It is a current holding, not a sum. TBC.
  */
 export function currentExtraDice(playerScores) {
-  if (!playerScores.length) return 0;
-  const latest = playerScores.reduce((a, b) => (b.jornada > a.jornada ? b : a));
-  return clamp(Number(latest.extra_dice) || 0, 0, MAX_EXTRA_DICE);
+  const latest = latestScore(playerScores);
+  return latest ? clamp(Number(latest.extra_dice) || 0, 0, MAX_EXTRA_DICE) : 0;
+}
+
+/**
+ * The face of each of those extra dice, rolled every jornada: from the same
+ * latest score row. 0 for a die whose face wasn't entered (shown blank).
+ */
+export function currentExtraDiceFaces(playerScores) {
+  const latest = latestScore(playerScores);
+  const faces = (latest && latest.extra_dice_faces) || [];
+  return Array.from({ length: currentExtraDice(playerScores) }, (_, i) => (isDieFace(faces[i]) ? faces[i] : 0));
+}
+
+function latestScore(playerScores) {
+  if (!playerScores.length) return null;
+  return playerScores.reduce((a, b) => (b.jornada > a.jornada ? b : a));
 }
 
 /** Ranking order: points desc, then CASA desc, then name asc. TBC tiebreak. */

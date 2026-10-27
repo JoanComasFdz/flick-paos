@@ -27,7 +27,8 @@ const SHEETS = {
   players:   { name: 'Players',   header: ['player_id', 'name', 'titles', 'active', 'order'] },
   matchdays: { name: 'Matchdays', header: ['season', 'jornada', 'type', 'date', 'rival', 'home_away',
                                            'barca_goals', 'rival_goals', 'dice', 'dice_counts', 'notes', 'updated_at'] },
-  scores:    { name: 'Scores',    header: ['season', 'jornada', 'player_id', 'points', 'casa', 'extra_dice'] },
+  scores:    { name: 'Scores',    header: ['season', 'jornada', 'player_id', 'points', 'casa', 'extra_dice',
+                                           'extra_dice_faces'] },
 };
 
 const INITIAL_PLAYERS = [
@@ -73,7 +74,11 @@ function doPost(e) {
   }
 }
 
-/** Run once from the editor: creates the tabs, headers and the player list. */
+/**
+ * Run once from the editor: creates the tabs, headers and the player list.
+ * Safe to run again: it only rewrites the header rows (adding new columns) and
+ * adds the players when the Players tab is empty.
+ */
 function setup() {
   const ss = SpreadsheetApp.getActive();
   Object.values(SHEETS).forEach(def => {
@@ -133,6 +138,7 @@ function readAll(season) {
       points: int(s.points, 0),
       casa: int(s.casa, 0),
       extra_dice: int(s.extra_dice, 0),
+      extra_dice_faces: s.extra_dice_faces ? String(s.extra_dice_faces).split(',').map(x => int(x, 0)) : [],
     }));
 
   return { season, currentSeason: currentSeason(), seasons: seasons(), players, matchdays, scores };
@@ -178,6 +184,13 @@ function upsertMatchday(md, scores) {
     ['points', 'casa', 'extra_dice'].forEach(k => {
       if (s[k] != null && s[k] !== '' && isNaN(Number(s[k]))) throw new Error(k + ' must be a number for ' + id);
     });
+    const faces = s.extra_dice_faces || [];
+    if (!Array.isArray(faces) || faces.some(f => !(int(f) >= 1 && int(f) <= 6))) {
+      throw new Error('extra_dice_faces must be dice values 1–6 for ' + id);
+    }
+    if (faces.length && faces.length !== int(s.extra_dice, 0)) {
+      throw new Error('extra_dice_faces must have one face per extra die for ' + id);
+    }
   });
 
   deleteMatchday(season, jornada);
@@ -201,6 +214,7 @@ function upsertMatchday(md, scores) {
     points: String(int(s.points, 0)),
     casa: String(int(s.casa, 0)),
     extra_dice: String(int(s.extra_dice, 0)),
+    extra_dice_faces: (s.extra_dice_faces || []).map(f => int(f)).join(','),
   })));
 }
 

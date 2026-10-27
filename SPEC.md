@@ -78,6 +78,7 @@ type Score = {
   points: number;      // points earned in that matchday (can be negative)
   casa: number;        // per-matchday "casa" value (see rules)
   extra_dice: number;  // see rules
+  extra_dice_faces: number[]; // face (1..6) of each extra die, rolled every jornada; [] when not entered
 };
 ```
 
@@ -89,7 +90,7 @@ Some rules are still being confirmed. Implement these defaults behind clearly na
 |---|---|---|
 | Total points | Sum of `points` over all matchdays of the season (match + adjustment) | Confirmed |
 | CASA column | Sum of `casa` over the season | **TBC** — meaning to be confirmed |
-| DADO EXTRA column | Value of `extra_dice` from the **latest** matchday that has a score row for that player (it is a current holding, not a sum); shown as that many small dice icons, max 3 | **TBC** |
+| DADO EXTRA column | Value of `extra_dice` from the **latest** matchday that has a score row for that player (it is a current holding, not a sum); shown as that many small dice icons, max 3, each showing its face from `extra_dice_faces` of the same row (blank when not entered) | **TBC** |
 | Ranking | Sort by total points desc, then CASA desc, then name asc (locale `es`) | **TBC** tiebreak |
 | Position numbers | Sequential 1..n even on ties (matches current images) | Configurable: `SHARED_POSITIONS_ON_TIE = false` |
 | Leader highlight | Row in position 1 gets the green highlight | Confirmed |
@@ -127,7 +128,7 @@ Response:
   "matchday": { "season": "3", "jornada": 15, "type": "match", "date": "2026-10-26",
                 "rival": "Real Madrid", "home_away": "away",
                 "barca_goals": 1, "rival_goals": 2, "dice": 4, "notes": "" },
-  "scores": [ { "player_id": "salva", "points": 3, "casa": 1, "extra_dice": 0 }, ... ] }
+  "scores": [ { "player_id": "salva", "points": 3, "casa": 1, "extra_dice": 2, "extra_dice_faces": [4, 2] }, ... ] }
 
 { "action": "deleteMatchday", "pin": "1234", "season": "3", "jornada": 15 }
 ```
