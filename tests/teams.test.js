@@ -46,12 +46,13 @@ test("searchTeams finds listed teams by any word of a name or alias", () => {
   assert.ok(!names("girona").length, "teams outside the 2026-27 lists aren't offered");
 });
 
-test("the Dream Team easter egg only shows when searched for", () => {
+test("the New Team easter egg only shows when searched for", () => {
   const names = (q) => searchTeams(q).map((t) => t.name);
-  assert.ok(!names("").includes("Dream Team"));
-  assert.ok(!names("d").includes("Dream Team"));
-  assert.deepEqual(names("dream"), ["Dream Team"]);
-  assert.deepEqual(names("oliver"), ["Dream Team"]);
-  assert.deepEqual(names("benji"), ["Dream Team"]);
-  assert.equal(findTeam("dream team").code, "DT");
+  assert.ok(!names("").includes("New Team"));
+  assert.ok(!names("ne").includes("New Team"));
+  assert.ok(names("new team").includes("New Team"));
+  assert.deepEqual(names("oliver"), ["New Team"]);
+  assert.deepEqual(names("benji"), ["New Team"]);
+  assert.deepEqual(names("nankatsu"), ["New Team"]);
+  assert.equal(findTeam("new team").code, "NT");
 });
