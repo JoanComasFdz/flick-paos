@@ -55,18 +55,6 @@ test("CASA is summed over the season", () => {
   assert.equal(vm.rows[0].casaHighlighted, true);
 });
 
-test("DADO EXTRA is the latest matchday's value, capped at 3", () => {
-  const vm = computeStandings(league(
-    [player("a"), player("b"), player("c")],
-    [match(1, 1), match(2, 2), match(3, 3)],
-    [score(3, "a", 0, 0, 0), score(1, "a", 0, 0, 2),
-     score(1, "b", 0, 0, 1), score(2, "b", 0, 0, 2),
-     score(2, "c", 0, 0, 7)],
-  ));
-  const extra = Object.fromEntries(vm.rows.map((r) => [r.name, r.extraDice]));
-  assert.deepEqual(extra, { a: 0, b: 2, c: rules.MAX_EXTRA_DICE });
-});
-
 test("ties break by CASA desc, then name asc in Spanish order", () => {
   const vm = computeStandings(league(
     [player("v", "Víctor"), player("z", "Zoe"), player("a", "Ana"), player("o", "Olí")],
@@ -131,7 +119,7 @@ test("inactive players are excluded", () => {
 test("a player with no score rows shows 0", () => {
   const vm = computeStandings(league([player("a"), player("b")], [match(1, 1)], [score(1, "a", 3, 1, 1)]));
   assert.deepEqual(vm.rows[1], {
-    player_id: "b", name: "b", titles: 0, points: 0, casa: 0, extraDice: 0, extraDiceFaces: [], pos: 2, leader: false, casaHighlighted: false,
+    player_id: "b", name: "b", titles: 0, points: 0, casa: 0, extraDiceFaces: [], pos: 2, leader: false, casaHighlighted: false,
   });
 });
 
@@ -176,23 +164,47 @@ test("withMatchday replaces the matchday and its scores", () => {
   assert.equal(data.scores.length, 2, "input is not mutated");
 });
 
-test("DADO EXTRA faces come from the latest matchday, one per extra die", () => {
-  const withFaces = (s, faces) => ({ ...s, extra_dice_faces: faces });
+const won = (s, faces) => ({ ...s, extra_dice: faces.length, extra_dice_faces: faces });
+
+test("DADO EXTRA lists every extra die won this season, in jornada order", () => {
   const vm = computeStandings(league(
-    [player("a"), player("b"), player("c"), player("d")],
-    [match(1, 1), match(2, 2)],
-    [withFaces(score(1, "a", 0, 0, 1), [6]), withFaces(score(2, "a", 0, 0, 2), [4, 2]),
-     withFaces(score(2, "b", 0, 0, 2), [5]),
-     score(2, "c", 0, 0, 1),
-     withFaces(score(2, "d", 0, 0, 0), [3])],
+    [player("a"), player("b"), player("c")],
+    [match(1, 1), match(2, 2), match(3, 3)],
+    [won(score(3, "a", 0), [2]), won(score(1, "a", 0), [6]), score(2, "a", 0),
+     won(score(2, "b", 0), [5]),
+     score(1, "c", 0)],
   ));
   const faces = Object.fromEntries(vm.rows.map((r) => [r.name, r.extraDiceFaces]));
-  assert.deepEqual(faces, { a: [4, 2], b: [5, 0], c: [0], d: [] });
+  assert.deepEqual(faces, { a: [6, 2], b: [5], c: [] });
 });
 
-test("DADO EXTRA faces are capped with the dice and ignore invalid values", () => {
+test("an extra die won in a match adds its face to the points", () => {
   const vm = computeStandings(league(
-    [player("a")], [match(1, 1)], [{ ...score(1, "a", 0, 0, 5), extra_dice_faces: [1, 9, 3, 4, 5] }],
+    [player("a"), player("b")], [match(1, 1), match(2, 2)],
+    [won(score(1, "a", 3), [4]), score(2, "a", 1), score(1, "b", 3)],
   ));
-  assert.deepEqual(vm.rows[0].extraDiceFaces, [1, 0, 3]);
+  assert.deepEqual(summary(vm), [[1, "a", 8], [2, "b", 3]]);
+});
+
+test("an adjustment's extra dice are listed but their faces aren't added again", () => {
+  const vm = computeStandings(league(
+    [player("a")], [adjustment(14, [0, 0, 0, 0, 0, 0]), match(15, 1)],
+    [won(score(14, "a", 42), [4, 2]), won(score(15, "a", 3), [5])],
+  ));
+  assert.equal(vm.rows[0].points, 42 + 3 + 5);
+  assert.deepEqual(vm.rows[0].extraDiceFaces, [4, 2, 5]);
+});
+
+test("an extra die without a face shows blank and adds nothing", () => {
+  const vm = computeStandings(league(
+    [player("a")], [match(1, 1)], [{ ...score(1, "a", 2), extra_dice: 2, extra_dice_faces: [9] }],
+  ));
+  assert.deepEqual(vm.rows[0].extraDiceFaces, [0, 0]);
+  assert.equal(vm.rows[0].points, 2);
+});
+
+test("topScorers counts the extra die of a match", () => {
+  const data = league([player("a", "Ana"), player("b", "Bea")], [match(1, 1)],
+    [won(score(1, "a", 3), [2]), score(1, "b", 4)]);
+  assert.deepEqual(topScorers(data, 1), { names: ["Ana"], points: 5 });
 });

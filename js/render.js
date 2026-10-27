@@ -101,7 +101,7 @@ function diceBox(face) {
 function tableRow(r) {
   const trophies = Array.from({ length: r.titles }, () => trophySvg("c-trophy")).join("");
   const dice = r.extraDiceFaces.map((face) => dieSvg(face, { style: "ivory", className: "c-extra-die" })).join("");
-  return `<div class="c-row${r.leader ? " is-leader" : ""}">
+  return `<div class="c-row${r.leader ? " is-leader" : ""}" style="--extra-n:${Math.max(r.extraDiceFaces.length, 1)}">
     <div class="c-pos">${r.pos}</div>
     <div class="c-name"><span class="c-name-text">${escapeHtml(r.name)}</span>${trophies}</div>
     <div class="c-pts">${r.points}</div>

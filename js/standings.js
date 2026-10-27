@@ -14,16 +14,16 @@ export function computeStandings(data, options = {}) {
   const byPlayer = new Map(players.map((p) => [p.player_id, []]));
   for (const s of scores) byPlayer.get(s.player_id)?.push(s);
 
+  const adjustments = new Set(matchdays.filter((m) => m.type === "adjustment").map((m) => m.jornada));
   const unranked = players.map((p) => {
     const own = byPlayer.get(p.player_id);
     return {
       player_id: p.player_id,
       name: p.name,
       titles: Number(p.titles) || 0,
-      points: rules.totalPoints(own),
+      points: rules.totalPoints(own, adjustments),
       casa: rules.casaTotal(own),
-      extraDice: rules.currentExtraDice(own),
-      extraDiceFaces: rules.currentExtraDiceFaces(own),
+      extraDiceFaces: rules.extraDiceWon(own),
     };
   });
 
@@ -65,11 +65,14 @@ export function matchHeader(md) {
 /** Players who earned the most points in one matchday (for the history list). */
 export function topScorers(data, jornada) {
   const names = new Map((data.players || []).map((p) => [p.player_id, p.name]));
-  const rows = (data.scores || []).filter((s) => s.jornada === jornada);
+  const md = (data.matchdays || []).find((m) => m.jornada === jornada);
+  const rows = (data.scores || [])
+    .filter((s) => s.jornada === jornada)
+    .map((s) => ({ ...s, total: rules.scorePoints(s, md?.type === "adjustment") }));
   if (!rows.length) return { names: [], points: 0 };
-  const max = Math.max(...rows.map((s) => s.points));
+  const max = Math.max(...rows.map((s) => s.total));
   return {
-    names: rows.filter((s) => s.points === max).map((s) => names.get(s.player_id) || s.player_id),
+    names: rows.filter((s) => s.total === max).map((s) => names.get(s.player_id) || s.player_id),
     points: max,
   };
 }

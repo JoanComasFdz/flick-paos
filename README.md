@@ -29,7 +29,7 @@ node --test
 
 1. Open the page on the phone and tap **Nueva jornada**. The first time, the page asks for the group's PIN and remembers it on that phone.
 2. The jornada number and today's date are filled in. Enter the rival, *En casa* / *Fuera*, the goals and tap the die that came out.
-3. For each player set the points of the matchday (− / +, can be negative), *Casa* and *Dado extra* (0–3; it starts at what the player holds now), and tap the face each extra die rolled. The **Vista previa** at the bottom shows the resulting table.
+3. For each player set the points of the matchday (− / +, can be negative), and *Casa*. If you were 5 or more, pick who rolled the extra die (the last in the table among those watching) and what it showed: its face is added to their points. The **Vista previa** at the bottom shows the resulting table.
 4. Tap **Guardar**. If the PIN has changed since, the page asks for the new one.
 5. Back on the scoreboard, tap **Compartir** (sends the image straight to WhatsApp) or **Descargar imagen**.
 
@@ -37,7 +37,7 @@ To fix a matchday: **Historial** → tap it → change it and save, or **Borrar 
 
 ### Starting from an existing table (Ajuste)
 
-To start from totals instead of the full history (e.g. the table after jornada 14), tap **Avanzado** → **Ajuste**: enter each player's *total* points, casa and dado extra, and how many times each die face has come out. The match fields are optional and only show in the header; an adjustment never counts as a die roll. Matches added after it add on top.
+To start from totals instead of the full history (e.g. the table after jornada 14), tap **Avanzado** → **Ajuste**: enter each player's *total* points and casa, the extra dice each one has won (with their faces), and how many times each die face has come out. The match fields are optional and only show in the header; an adjustment never counts as a die roll. Matches added after it add on top.
 
 ## Changing the rules
 
@@ -47,7 +47,8 @@ Every scoring and ranking rule is in [js/rules.js](js/rules.js), one documented 
 |---|---|
 | Total points | `totalPoints` |
 | CASA column, and when it is green | `casaTotal`, `isCasaHighlighted` |
-| DADO EXTRA column, maximum dice, faces | `currentExtraDice`, `MAX_EXTRA_DICE`, `currentExtraDiceFaces` |
+| Points of a matchday, extra die included | `scorePoints` |
+| DADO EXTRA column | `extraDiceWon`, `EXTRA_DIE_MIN_WATCHERS` |
 | Ranking and tiebreaks | `compareStandings`, `isTie` |
 | Shared positions on ties (1, 2, 2, 4) | `SHARED_POSITIONS_ON_TIE` |
 | Dice counter | `diceCounts` |
