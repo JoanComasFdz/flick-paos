@@ -1,6 +1,7 @@
 // PNG export of the scoreboard card, at full size (1080×1620).
 
 import { renderCard, CARD_WIDTH, CARD_HEIGHT } from "./render.js";
+import { getLang } from "./i18n.js";
 
 const HTML_TO_IMAGE = "https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/+esm";
 
@@ -18,7 +19,7 @@ export function fileName(vm) {
 
 /** The scoreboard as a PNG blob; the same view model is rendered only once. */
 export function cardPng(vm) {
-  const key = JSON.stringify(vm);
+  const key = getLang() + JSON.stringify(vm);
   if (!cache.has(key)) {
     const promise = renderPng(vm);
     promise.catch(() => cache.delete(key));

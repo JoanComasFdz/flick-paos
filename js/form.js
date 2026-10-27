@@ -3,50 +3,56 @@
 import { computeStandings, withMatchday } from "./standings.js";
 import { renderMiniTable } from "./render.js";
 import { escapeHtml, dieSvg } from "./icons.js";
-import { MAX_EXTRA_DICE, isDieFace } from "./rules.js";
+import { EXTRA_DIE_MIN_WATCHERS, isDieFace } from "./rules.js";
+
+/** Most extra dice a player can be given in an adjustment (dice won before it). */
+const ADJUSTMENT_MAX_EXTRA_DICE = 5;
+import { t } from "./i18n.js";
 
 /**
  * @param {HTMLElement} root
  * @param {{data: object, jornada: number|null,
  *          onSave: (matchday: object, scores: object[], replacing: boolean) => Promise<void>,
  *          onDelete: (jornada: number) => Promise<void>,
- *          onCancel: () => void}} options
+ *          onCancel: () => void, draft?: object}} options
+ *   `draft` restores a form being filled in (after a language change).
+ * @returns {{draft: () => object} | undefined}
  */
-export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) {
+export function renderForm(root, { data, jornada, onSave, onDelete, onCancel, draft }) {
   const players = data.players.filter((p) => p.active).sort((a, b) => a.order - b.order);
   const existing = jornada == null ? null : data.matchdays.find((m) => m.jornada === jornada);
   if (jornada != null && !existing) {
-    root.innerHTML = `<div class="error-box"><p>La jornada ${jornada} no existe.</p><a class="btn" href="#/">Volver</a></div>`;
+    root.innerHTML = `<div class="error-box"><p>${t("notFound", { n: jornada })}</p><a class="btn" href="#/">${t("back")}</a></div>`;
     return;
   }
 
-  const state = initialState(data, players, existing);
+  const state = draft ?? initialState(data, players, existing);
   const editing = Boolean(existing);
   const rivals = [...new Set(data.matchdays.map((m) => m.rival).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
 
   root.innerHTML = `
     <form class="matchday-form" novalidate>
-      <h2>${editing ? `Editar <span>jornada ${state.jornada}</span>` : "Nueva <span>jornada</span>"}</h2>
+      <h2>${editing ? t("editTitle", { n: state.jornada }) : t("newTitle")}</h2>
       <p class="form-error" role="alert" hidden></p>
 
       <div class="panel">
         <div class="row2">
           <div class="field">
-            <label for="f-jornada">Jornada</label>
+            <label for="f-jornada">${t("jornada")}</label>
             <input id="f-jornada" class="input" type="number" inputmode="numeric" min="1" step="1"
               value="${state.jornada}" ${editing ? "readonly" : ""}>
           </div>
           <div class="field">
-            <label for="f-date">Fecha</label>
+            <label for="f-date">${t("date")}</label>
             <input id="f-date" class="input" type="date" value="${escapeHtml(state.date)}">
           </div>
         </div>
-        <button type="button" class="toggle-advanced" aria-expanded="${state.type === "adjustment"}">Avanzado</button>
+        <button type="button" class="toggle-advanced" aria-expanded="${state.type === "adjustment"}">${t("advanced")}</button>
         <div class="field advanced" ${state.type === "adjustment" ? "" : "hidden"}>
-          <span class="label" id="f-type-label">Tipo</span>
+          <span class="label" id="f-type-label">${t("type")}</span>
           <div class="seg" role="group" aria-labelledby="f-type-label" data-seg="type">
-            <button type="button" data-value="match">Partido</button>
-            <button type="button" data-value="adjustment">Ajuste</button>
+            <button type="button" data-value="match">${t("match")}</button>
+            <button type="button" data-value="adjustment">${t("adjustment")}</button>
           </div>
         </div>
       </div>
@@ -54,43 +60,61 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
       <div class="panel">
         <h3 class="match-title"></h3>
         <p class="adjustment-only match-hint" style="color:var(--muted);font-size:13px;margin:-4px 0 12px">
-          Solo se muestra en la cabecera; un ajuste nunca cuenta como tirada del dado.</p>
+          ${t("matchHint")}</p>
         <div class="field">
-          <label for="f-rival">Rival</label>
+          <label for="f-rival">${t("rival")}</label>
           <input id="f-rival" class="input" type="text" list="f-rivals" autocomplete="off" value="${escapeHtml(state.rival)}">
           <datalist id="f-rivals">${rivals.map((r) => `<option value="${escapeHtml(r)}">`).join("")}</datalist>
         </div>
         <div class="field">
-          <span class="label" id="f-home-label">El Barça juega</span>
+          <span class="label" id="f-home-label">${t("barcaPlays")}</span>
           <div class="seg" role="group" aria-labelledby="f-home-label" data-seg="home_away">
-            <button type="button" data-value="home">En casa</button>
-            <button type="button" data-value="away">Fuera</button>
+            <button type="button" data-value="home">${t("home")}</button>
+            <button type="button" data-value="away">${t("away")}</button>
           </div>
         </div>
         <div class="row2">
           <div class="field">
-            <span class="label">Goles Barça</span>
-            ${stepper("barca_goals", state.barca_goals, "Goles del Barça", { min: 0 })}
+            <span class="label">${t("barcaGoals")}</span>
+            ${stepper("barca_goals", state.barca_goals, t("barcaGoalsLabel"), { min: 0 })}
           </div>
           <div class="field">
-            <span class="label">Goles rival</span>
-            ${stepper("rival_goals", state.rival_goals, "Goles del rival", { min: 0 })}
+            <span class="label">${t("rivalGoals")}</span>
+            ${stepper("rival_goals", state.rival_goals, t("rivalGoalsLabel"), { min: 0 })}
           </div>
         </div>
         <div class="field">
-          <span class="label" id="f-dice-label">Dado</span>
+          <span class="label" id="f-dice-label">${t("dice")}</span>
           <div class="dice-picker" role="group" aria-labelledby="f-dice-label">
-            ${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" data-dice="${n}" aria-label="Dado ${n}">${dieSvg(n, { style: "white" })}</button>`).join("")}
+            ${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" data-dice="${n}" aria-label="${t("diceN", { n })}">${dieSvg(n, { style: "white" })}</button>`).join("")}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel match-only">
+        <h3>${t("extraDice")}</h3>
+        <p class="hint">${t("extraHint", { n: EXTRA_DIE_MIN_WATCHERS })}</p>
+        <div class="field">
+          <label for="f-extra-player">${t("extraWho")}</label>
+          <select id="f-extra-player" class="input">
+            <option value="">${t("extraNobody")}</option>
+            ${lastFirst(data, players).map((p) => `<option value="${escapeHtml(p.player_id)}" ${state.extra.player === p.player_id ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field extra-face-field" ${state.extra.player ? "" : "hidden"}>
+          <span class="label" id="f-extra-face-label">${t("extraFace")}</span>
+          <div class="dice-picker" role="group" aria-labelledby="f-extra-face-label">
+            ${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" data-extra-face="${n}" aria-label="${n}">${dieSvg(n, { style: "ivory" })}</button>`).join("")}
           </div>
         </div>
       </div>
 
       <div class="panel adjustment-only">
-        <h3>Veces que ha salido cada cara</h3>
+        <h3>${t("facesTitle")}</h3>
         <div class="dice-counts">
           ${state.dice_counts.map((c, i) => `
             <div class="field">
-              <label for="f-count-${i}">Cara ${i + 1}</label>
+              <label for="f-count-${i}">${t("faceN", { n: i + 1 })}</label>
               <input id="f-count-${i}" class="input" type="number" inputmode="numeric" min="0" step="1" data-count="${i}" value="${c}">
             </div>`).join("")}
         </div>
@@ -98,26 +122,27 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
 
       <div class="panel">
         <h3 class="players-title"></h3>
+        <p class="hint match-only">${t("pointsHint")}</p>
         ${players.map((p) => playerRow(p, state.scores[p.player_id])).join("")}
       </div>
 
       <div class="panel">
         <div class="field">
-          <label for="f-notes">Notas</label>
+          <label for="f-notes">${t("notes")}</label>
           <input id="f-notes" class="input" type="text" value="${escapeHtml(state.notes)}">
         </div>
       </div>
 
       <div class="panel">
-        <h3>Vista previa</h3>
+        <h3>${t("preview")}</h3>
         <div class="preview"></div>
       </div>
 
-      ${editing ? `<button type="button" class="btn btn-danger delete" style="width:100%;margin-bottom:14px">Borrar jornada</button>` : ""}
+      ${editing ? `<button type="button" class="btn btn-danger delete" style="width:100%;margin-bottom:14px">${t("deleteMatchday")}</button>` : ""}
 
       <div class="savebar">
-        <button type="button" class="btn cancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary save">Guardar</button>
+        <button type="button" class="btn cancel">${t("cancel")}</button>
+        <button type="submit" class="btn btn-primary save">${t("save")}</button>
       </div>
     </form>`;
 
@@ -131,12 +156,19 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
     });
     form.querySelectorAll("[data-dice]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.dice) === state.dice)));
     form.querySelectorAll("[data-extra]").forEach((b) => {
-      b.setAttribute("aria-pressed", String(Number(b.dataset.value) === state.scores[b.dataset.extra].extra_dice));
+      b.setAttribute("aria-pressed", String(Number(b.dataset.value) === state.scores[b.dataset.extra].extra_dice_faces.length));
+    });
+    form.querySelectorAll("[data-face]").forEach((b) => {
+      const faces = state.scores[b.dataset.face].extra_dice_faces;
+      b.setAttribute("aria-pressed", String(faces[Number(b.dataset.index)] === Number(b.dataset.value)));
     });
     const adjustment = state.type === "adjustment";
     form.querySelectorAll(".adjustment-only").forEach((el) => (el.hidden = !adjustment));
-    $(".match-title").textContent = adjustment ? "Partido (opcional)" : "Partido";
-    $(".players-title").textContent = adjustment ? "Totales de cada jugador" : "Puntos de la jornada";
+    form.querySelectorAll(".match-only").forEach((el) => (el.hidden = adjustment));
+    form.querySelectorAll("[data-extra-face]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.extraFace) === state.extra.face)));
+    $(".extra-face-field").hidden = !state.extra.player;
+    $(".match-title").textContent = t(adjustment ? "matchOptional" : "match");
+    $(".players-title").textContent = t(adjustment ? "playersTotals" : "playersPoints");
     $(".preview").innerHTML = renderMiniTable(computeStandings(withMatchday(data, ...build())));
   }
 
@@ -157,18 +189,27 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
       dice_counts: adjustment ? [...state.dice_counts] : null,
       notes: state.notes.trim(),
     };
-    const scores = players.map((p) => ({ player_id: p.player_id, ...state.scores[p.player_id] }));
+    const scores = players.map((p) => {
+      const s = state.scores[p.player_id];
+      // A match has at most one extra die; an adjustment lists the dice won before it.
+      const faces = adjustment ? s.extra_dice_faces : state.extra.player === p.player_id ? [state.extra.face] : [];
+      return { player_id: p.player_id, points: s.points, casa: s.casa, extra_dice: faces.length, extra_dice_faces: faces };
+    });
     return [matchday, scores];
   }
 
   function validate() {
-    if (!Number.isInteger(state.jornada) || state.jornada < 1) return "La jornada debe ser un número mayor que 0.";
+    if (!Number.isInteger(state.jornada) || state.jornada < 1) return t("errJornada");
     if (state.type === "match") {
-      if (!state.rival.trim()) return "Falta el rival.";
-      if (!isDieFace(state.dice)) return "Elige el número del dado.";
+      if (!state.rival.trim()) return t("errRival");
+      if (!isDieFace(state.dice)) return t("errDice");
     }
+    if (state.type === "match" && state.extra.player && !isDieFace(state.extra.face)) return t("errExtraFace");
+    const missingFace = state.type === "adjustment"
+      && players.find((p) => state.scores[p.player_id].extra_dice_faces.some((f) => !isDieFace(f)));
+    if (missingFace) return t("errFace", { name: missingFace.name });
     if (state.type === "adjustment" && state.dice_counts.some((c) => !Number.isInteger(c) || c < 0)) {
-      return "Las veces que ha salido cada cara deben ser números enteros.";
+      return t("errCounts");
     }
     return "";
   }
@@ -195,7 +236,14 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
       // In an adjustment the dice is optional: tapping it again clears it.
       state.dice = state.dice === n && state.type === "adjustment" ? null : n;
     } else if (btn.dataset.extra) {
-      state.scores[btn.dataset.extra].extra_dice = Number(btn.dataset.value);
+      const score = state.scores[btn.dataset.extra];
+      score.extra_dice_faces = Array.from({ length: Number(btn.dataset.value) }, (_, i) => score.extra_dice_faces[i] ?? null);
+      form.querySelector(`.extra-faces[data-player="${btn.dataset.extra}"]`).innerHTML =
+        facePickers(players.find((p) => p.player_id === btn.dataset.extra), score);
+    } else if (btn.dataset.extraFace) {
+      state.extra.face = Number(btn.dataset.extraFace);
+    } else if (btn.dataset.face) {
+      state.scores[btn.dataset.face].extra_dice_faces[Number(btn.dataset.index)] = Number(btn.dataset.value);
     } else if (btn.dataset.step) {
       const input = btn.parentElement.querySelector("input");
       const min = input.min === "" ? -Infinity : Number(input.min);
@@ -215,7 +263,10 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
   });
 
   form.addEventListener("input", (e) => {
-    if (e.target.matches("input")) {
+    if (e.target.id === "f-extra-player") {
+      state.extra.player = e.target.value || null;
+      sync();
+    } else if (e.target.matches("input")) {
       setField(e.target);
       sync();
     }
@@ -240,14 +291,14 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
     const replacing = !editing && data.matchdays.some((m) => m.jornada === state.jornada);
     const save = $(".save");
     save.disabled = true;
-    save.textContent = "Guardando…";
+    save.textContent = t("saving");
     try {
       await onSave(...build(), replacing);
     } catch (err) {
       showError(err.message);
     } finally {
       save.disabled = false;
-      save.textContent = "Guardar";
+      save.textContent = t("save");
     }
   });
 
@@ -263,6 +314,7 @@ export function renderForm(root, { data, jornada, onSave, onDelete, onCancel }) 
   }
 
   sync();
+  return { draft: () => state };
 }
 
 function initialState(data, players, existing) {
@@ -271,22 +323,27 @@ function initialState(data, players, existing) {
     matchdays: data.matchdays.filter((m) => !existing || m.jornada < existing.jornada),
     scores: data.scores.filter((s) => !existing || s.jornada < existing.jornada),
   });
-  const holding = Object.fromEntries(before.rows.map((r) => [r.player_id, r.extraDice]));
+  const wonBefore = Object.fromEntries(before.rows.map((r) => [r.player_id, r.extraDiceFaces]));
   const last = data.matchdays.reduce((max, m) => Math.max(max, m.jornada), 0);
 
   const scores = {};
+  const extra = { player: null, face: null };
   for (const p of players) {
     const row = existing && data.scores.find((s) => s.jornada === existing.jornada && s.player_id === p.player_id);
-    scores[p.player_id] = row
-      ? { points: row.points, casa: row.casa, extra_dice: row.extra_dice }
-      // A new matchday keeps each player's current dado extra unless changed.
-      : { points: 0, casa: 0, extra_dice: holding[p.player_id] ?? 0 };
+    const faces = row ? facesOf(row) : [];
+    if (existing?.type === "match" && faces.length && !extra.player) Object.assign(extra, { player: p.player_id, face: faces[0] });
+    scores[p.player_id] = {
+      points: row ? row.points : 0,
+      casa: row ? row.casa : 0,
+      // Used by an adjustment: the dice won before it (by default, those won so far).
+      extra_dice_faces: existing?.type === "adjustment" ? faces : (wonBefore[p.player_id] || []).map((f) => f || null),
+    };
   }
 
   if (!existing) {
     return {
       jornada: last + 1, date: today(), type: "match", rival: "", home_away: "home",
-      barca_goals: 0, rival_goals: 0, dice: null, dice_counts: before.diceCounts, notes: "", scores,
+      barca_goals: 0, rival_goals: 0, dice: null, dice_counts: before.diceCounts, notes: "", scores, extra,
     };
   }
   return {
@@ -301,32 +358,58 @@ function initialState(data, players, existing) {
     dice_counts: existing.dice_counts ? [...existing.dice_counts] : before.diceCounts,
     notes: existing.notes || "",
     scores,
+    extra,
   };
 }
 
 function stepper(field, value, label, { min, player, key } = {}) {
   const data = player ? `data-player="${player}" data-key="${key}"` : `data-field="${field}"`;
   return `<div class="stepper">
-    <button type="button" data-step="-1" aria-label="${escapeHtml(label)}: restar 1">−</button>
+    <button type="button" data-step="-1" aria-label="${escapeHtml(t("minus", { label }))}">−</button>
     <input type="number" inputmode="numeric" step="1" ${min != null ? `min="${min}"` : ""} ${data}
       value="${value}" aria-label="${escapeHtml(label)}">
-    <button type="button" data-step="1" aria-label="${escapeHtml(label)}: sumar 1">+</button>
+    <button type="button" data-step="1" aria-label="${escapeHtml(t("plus", { label }))}">+</button>
   </div>`;
 }
 
 function playerRow(p, s) {
   const name = escapeHtml(p.name);
-  const extra = Array.from({ length: MAX_EXTRA_DICE + 1 }, (_, n) =>
+  const extra = Array.from({ length: ADJUSTMENT_MAX_EXTRA_DICE + 1 }, (_, n) =>
     `<button type="button" data-extra="${p.player_id}" data-value="${n}">${n}</button>`).join("");
   return `<div class="player-row">
     <div class="player-name">${name}</div>
     <div class="player-controls">
-      <div><span class="mini-label">Puntos</span>${stepper(null, s.points, `Puntos de ${p.name}`, { player: p.player_id, key: "points" })}</div>
-      <div><span class="mini-label">Casa</span>${stepper(null, s.casa, `Casa de ${p.name}`, { player: p.player_id, key: "casa" })}</div>
-      <div><span class="mini-label" id="x-${p.player_id}">Dado extra</span>
+      <div><span class="mini-label">${t("points")}</span>${stepper(null, s.points, t("pointsOf", { name: p.name }), { player: p.player_id, key: "points" })}</div>
+      <div><span class="mini-label">${t("casa")}</span>${stepper(null, s.casa, t("casaOf", { name: p.name }), { player: p.player_id, key: "casa" })}</div>
+      <div class="adjustment-only"><span class="mini-label" id="x-${p.player_id}">${t("extraDiceWon")}</span>
         <div class="seg" role="group" aria-labelledby="x-${p.player_id}">${extra}</div></div>
     </div>
+    <div class="extra-faces adjustment-only" data-player="${p.player_id}">${facePickers(p, s)}</div>
   </div>`;
+}
+
+/** One row of six die buttons per extra die, to enter the face it rolled. */
+function facePickers(p, s) {
+  return s.extra_dice_faces.map((_, i) => `
+    <div class="extra-face" role="group" aria-label="${escapeHtml(t("extraFaceOf", { n: i + 1, name: p.name }))}">
+      <span class="mini-label">${t("extraDieN", { n: i + 1 })}</span>
+      <div class="dice-picker dice-picker-small">
+        ${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" data-face="${p.player_id}" data-index="${i}" data-value="${n}"
+          aria-label="${n}">${dieSvg(n, { style: "ivory" })}</button>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+/** Players from last to first in the table: the extra die usually goes to the first one watching. */
+function lastFirst(data, players) {
+  const order = computeStandings(data).rows.map((r) => r.player_id).reverse();
+  return [...players].sort((a, b) => order.indexOf(a.player_id) - order.indexOf(b.player_id));
+}
+
+function facesOf(row) {
+  const faces = Array.isArray(row.extra_dice_faces) ? row.extra_dice_faces : [];
+  const count = Math.max(Number(row.extra_dice) || 0, faces.length);
+  return Array.from({ length: count }, (_, i) => (isDieFace(faces[i]) ? faces[i] : null));
 }
 
 function today() {

@@ -5,18 +5,28 @@
 /** When true, players tied on every ranking criterion share a position (1, 2, 2, 4). */
 export const SHARED_POSITIONS_ON_TIE = false;
 
-/** Most "dado extra" dice shown for a player. TBC. */
-export const MAX_EXTRA_DICE = 3;
+/** Players watching together needed for the extra die to be rolled. */
+export const EXTRA_DIE_MIN_WATCHERS = 5;
 
 /** Locale used to break ties by name. */
 export const NAME_LOCALE = "es";
 
-/** Total points: sum of `points` over every matchday of the season (matches and adjustments). */
-export function totalPoints(playerScores) {
-  return playerScores.reduce((sum, s) => sum + (Number(s.points) || 0), 0);
+/**
+ * Points a score row adds: its `points`, plus the face of each extra die won
+ * in that matchday. An adjustment's points are totals that already include
+ * the dice, so its dice add nothing.
+ */
+export function scorePoints(score, isAdjustment) {
+  const dice = isAdjustment ? 0 : extraDiceFaces(score).reduce((sum, f) => sum + f, 0);
+  return (Number(score.points) || 0) + dice;
 }
 
-/** CASA column: sum of `casa` over the season. TBC: meaning to be confirmed. */
+/** Total points: scorePoints over every matchday of the season (matches and adjustments). */
+export function totalPoints(playerScores, adjustmentJornadas = new Set()) {
+  return playerScores.reduce((sum, s) => sum + scorePoints(s, adjustmentJornadas.has(s.jornada)), 0);
+}
+
+/** CASA column: how many times the player hosted (+1 per matchday), summed over the season. */
 export function casaTotal(playerScores) {
   return playerScores.reduce((sum, s) => sum + (Number(s.casa) || 0), 0);
 }
@@ -27,13 +37,20 @@ export function isCasaHighlighted(casa) {
 }
 
 /**
- * DADO EXTRA column: the `extra_dice` of the latest matchday with a score row
- * for the player. It is a current holding, not a sum. TBC.
+ * DADO EXTRA column: every extra die the player has won this season, in
+ * jornada order, by its face. When 5 or more watch the match, whoever is last
+ * in the table among them rolls one die and adds its face to their points.
+ * An adjustment lists the dice won before it. A face of 0 means not entered (blank die).
  */
-export function currentExtraDice(playerScores) {
-  if (!playerScores.length) return 0;
-  const latest = playerScores.reduce((a, b) => (b.jornada > a.jornada ? b : a));
-  return clamp(Number(latest.extra_dice) || 0, 0, MAX_EXTRA_DICE);
+export function extraDiceWon(playerScores) {
+  return [...playerScores].sort((a, b) => a.jornada - b.jornada).flatMap(extraDiceFaces);
+}
+
+/** The extra dice faces of one score row: `extra_dice` dice, 0 where the face is unknown. */
+function extraDiceFaces(score) {
+  const faces = score.extra_dice_faces || [];
+  const count = Math.max(Number(score.extra_dice) || 0, faces.length);
+  return Array.from({ length: count }, (_, i) => (isDieFace(faces[i]) ? faces[i] : 0));
 }
 
 /** Ranking order: points desc, then CASA desc, then name asc. TBC tiebreak. */
@@ -102,8 +119,4 @@ export function lastMatchday(matchdays) {
 
 export function isDieFace(n) {
   return Number.isInteger(n) && n >= 1 && n <= 6;
-}
-
-function clamp(n, min, max) {
-  return Math.min(max, Math.max(min, n));
 }
