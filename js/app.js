@@ -109,14 +109,20 @@ seasonSelect.addEventListener("change", () => {
 
 const PIN_KEY = "flickpaos:pin";
 
-/** Runs a write with the stored PIN, asking for it (and checking it) when needed. */
-async function withPin(write) {
-  let message = "";
-  for (;;) {
-    let pin = storage.get(PIN_KEY);
-    if (!pin) {
-      pin = await askPin(message);
+let pinPromise = null;
+
+/**
+ * The stored PIN, or one the user types and the backend accepts (then stored).
+ * Null when the user cancels. Concurrent callers share one prompt.
+ */
+function ensurePin(message = "", onChecking = () => {}) {
+  const stored = storage.get(PIN_KEY);
+  if (stored) return Promise.resolve(stored);
+  pinPromise ??= (async () => {
+    for (;;) {
+      const pin = await askPin(message);
       if (pin == null) return null;
+      onChecking();
       try {
         await api.checkPin(pin);
       } catch (err) {
@@ -125,7 +131,18 @@ async function withPin(write) {
         continue;
       }
       storage.set(PIN_KEY, pin);
+      return pin;
     }
+  })().finally(() => { pinPromise = null; });
+  return pinPromise;
+}
+
+/** Runs a write with the PIN; a PIN that stopped working is forgotten and asked for again. */
+async function withPin(write) {
+  let message = "";
+  for (;;) {
+    const pin = await ensurePin(message);
+    if (pin == null) return null;
     try {
       return await write(pin);
     } catch (err) {
@@ -173,7 +190,7 @@ function route() {
   refit = null;
   if (!state.data) return renderLoadingOrError();
   const m = /^#\/jornada\/(new|\d+)$/.exec(hash);
-  if (m) return showForm(m[1] === "new" ? null : Number(m[1]));
+  if (m) return openForm(m[1] === "new" ? null : Number(m[1]));
   if (hash === "#/historial") return showHistory();
   return showScoreboard();
 }
@@ -255,6 +272,26 @@ async function busy(button, label, action) {
 function cardDescription(vm) {
   const top = vm.rows.slice(0, 3).map((r) => `${r.pos}. ${r.name} ${r.points}`).join(", ");
   return `Clasificación de la temporada ${vm.season} tras ${vm.jornadasPlayed} jornadas: ${top}`;
+}
+
+/** Asks for the PIN before showing the form, so nobody fills it in for nothing. */
+async function openForm(jornada) {
+  if (storage.get(PIN_KEY)) return showForm(jornada);
+  const hash = location.hash;
+  let pin = null;
+  try {
+    pin = await ensurePin("", () => {
+      view.innerHTML = `<div class="loading" role="status"><div class="spinner"></div><p>Comprobando el PIN…</p></div>`;
+    });
+  } catch (err) {
+    toast(err.message, true);
+  }
+  if (location.hash !== hash) return; // the user went elsewhere meanwhile
+  if (pin == null) {
+    location.hash = "#/";
+    return;
+  }
+  showForm(jornada);
 }
 
 function showForm(jornada) {

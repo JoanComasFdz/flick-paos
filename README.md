@@ -26,10 +26,10 @@ node --test
 
 ## How the scorekeeper adds a matchday
 
-1. Open the page on the phone and tap **Nueva jornada**.
+1. Open the page on the phone and tap **Nueva jornada**. The first time, the page asks for the group's PIN and remembers it on that phone.
 2. The jornada number and today's date are filled in. Enter the rival, *En casa* / *Fuera*, the goals and tap the die that came out.
 3. For each player set the points of the matchday (− / +, can be negative), *Casa* and *Dado extra* (0–3; it starts at what the player holds now). The **Vista previa** at the bottom shows the resulting table.
-4. Tap **Guardar**. The first time, the page asks for the group's PIN and remembers it on that phone.
+4. Tap **Guardar**. If the PIN has changed since, the page asks for the new one.
 5. Back on the scoreboard, tap **Compartir** (sends the image straight to WhatsApp) or **Descargar imagen**.
 
 To fix a matchday: **Historial** → tap it → change it and save, or **Borrar jornada**.
