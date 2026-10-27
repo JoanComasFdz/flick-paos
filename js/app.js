@@ -7,6 +7,7 @@ import { renderForm } from "./form.js";
 import { cardPng, downloadPng, sharePng, canShareFiles } from "./export.js";
 import { escapeHtml, dieSvg } from "./icons.js";
 import { t, getLang, setLang, locale, LANGS } from "./i18n.js";
+import { renderNormas } from "./normas.js";
 
 const view = document.getElementById("view");
 const seasonSelect = document.getElementById("season");
@@ -73,7 +74,7 @@ async function load({ season = state.season } = {}) {
 
 /** Re-renders after a background refresh, but never under a form being filled in. */
 function rerender() {
-  if (view.querySelector("form")) return;
+  if (view.querySelector("form") || location.hash === "#/normas") return;
   route();
 }
 
@@ -189,11 +190,28 @@ function route() {
   const hash = location.hash || "#/";
   clearInterval(ageTimer);
   refit = null;
+  markTab(hash);
+  // The rules don't need the league data.
+  if (hash === "#/normas") return showNormas();
   if (!state.data) return renderLoadingOrError();
   const m = /^#\/jornada\/(new|\d+)$/.exec(hash);
   if (m) return openForm(m[1] === "new" ? null : Number(m[1]));
   if (hash === "#/historial") return showHistory();
   return showScoreboard();
+}
+
+/** Highlights the tab of the current view; a matchday form belongs to none. */
+function markTab(hash) {
+  const tab = hash === "#/historial" ? "history" : hash === "#/normas" ? "rules" : hash.startsWith("#/jornada") ? "" : "standings";
+  document.querySelectorAll("[data-tab]").forEach((a) => {
+    if (a.dataset.tab === tab) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+}
+
+function showNormas() {
+  view.innerHTML = renderNormas(getLang());
+  window.scrollTo(0, 0);
 }
 
 function renderLoadingOrError() {
@@ -231,8 +249,7 @@ function showScoreboard() {
     <div class="actions">
       <button type="button" class="btn btn-primary download ${shareSupported ? "" : "wide"}">${t("download")}</button>
       ${shareSupported ? `<button type="button" class="btn btn-garnet share">${t("share")}</button>` : ""}
-      <a class="btn" href="#/jornada/new">${t("newMatchday")}</a>
-      <a class="btn" href="#/historial">${t("history")}</a>
+      <a class="btn wide" href="#/jornada/new">${t("newMatchday")}</a>
     </div>`;
   bindStatus();
   refit = mountScaled(view.querySelector(".card-host"), renderCard(vm));
@@ -348,7 +365,7 @@ function showHistory() {
     ${statusLine()}
     <h2>${t("history")} <span>T${escapeHtml(data.season)}</span></h2>
     ${items ? `<ul class="history">${items}</ul>` : `<p style="color:var(--muted)">${t("noMatchdays")}</p>`}
-    <div class="actions"><a class="btn btn-primary" href="#/jornada/new">${t("newMatchday")}</a><a class="btn" href="#/">${t("standings")}</a></div>`;
+    <div class="actions"><a class="btn btn-primary wide" href="#/jornada/new">${t("newMatchday")}</a></div>`;
   bindStatus();
 }
 
@@ -388,6 +405,7 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === getLang())));
+  document.querySelector("nav.tabs").setAttribute("aria-label", t("sections"));
   renderSeasons();
 }
 

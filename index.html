@@ -16,6 +16,7 @@
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
+  <div class="sticky-head">
   <header class="topbar">
     <img class="topbar-crest" src="assets/crest.svg" alt="">
     <a class="topbar-title" href="#/" data-i18n-html="appTitle">Liga de los <span>Flick-Paos</span></a>
@@ -30,6 +31,12 @@
       </button>
     </div>
   </header>
+  <nav class="tabs" aria-label="Secciones">
+    <a href="#/" data-tab="standings" data-i18n="standings">Clasificación</a>
+    <a href="#/historial" data-tab="history" data-i18n="history">Historial</a>
+    <a href="#/normas" data-tab="rules" data-i18n="rules">Normas</a>
+  </nav>
+  </div>
 
   <main id="view" aria-live="polite">
     <div class="loading" role="status"><div class="spinner"></div><p data-i18n="loading">Cargando la liga…</p></div>
