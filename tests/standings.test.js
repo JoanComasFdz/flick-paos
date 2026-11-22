@@ -119,7 +119,7 @@ test("inactive players are excluded", () => {
 test("a player with no score rows shows 0", () => {
   const vm = computeStandings(league([player("a"), player("b")], [match(1, 1)], [score(1, "a", 3, 1, 1)]));
   assert.deepEqual(vm.rows[1], {
-    player_id: "b", name: "b", titles: 0, points: 0, casa: 0, extraDiceFaces: [], pos: 2, leader: false, casaHighlighted: false,
+    player_id: "b", name: "b", titles: 0, points: 0, casa: 0, extraDiceFaces: [], pos: 2, leader: false, casaHighlighted: false, move: null,
   });
 });
 
@@ -207,4 +207,45 @@ test("topScorers counts the extra die of a match", () => {
   const data = league([player("a", "Ana"), player("b", "Bea")], [match(1, 1)],
     [won(score(1, "a", 3), [2]), score(1, "b", 4)]);
   assert.deepEqual(topScorers(data, 1), { names: ["Ana"], points: 5 });
+});
+
+test("standings at a past jornada leave out later matchdays", () => {
+  const data = league(
+    [player("a", "Ana"), player("b", "Bea")],
+    [match(1, 3), match(2, 5)],
+    [score(1, "a", 5), score(1, "b", 2), score(2, "a", 0), score(2, "b", 6)],
+  );
+  const at1 = computeStandings(data, { jornada: 1 });
+  assert.deepEqual(summary(at1), [[1, "Ana", 5], [2, "Bea", 2]]);
+  assert.equal(at1.header.jornada, 1);
+  assert.deepEqual(at1.diceCounts, [0, 0, 1, 0, 0, 0]);
+  assert.equal(at1.jornadasPlayed, 1);
+  assert.deepEqual(summary(computeStandings(data, { jornada: 2 })), [[1, "Bea", 8], [2, "Ana", 5]]);
+  assert.deepEqual(summary(computeStandings(data)), summary(computeStandings(data, { jornada: 2 })));
+});
+
+test("position change against the previous jornada", () => {
+  const data = league(
+    [player("a", "Ana"), player("b", "Bea"), player("c", "Cris")],
+    [adjustment(14, [0, 0, 0, 0, 0, 0]), match(15, 2), match(16, 4)],
+    [score(14, "a", 10), score(14, "b", 8), score(14, "c", 6),
+     score(15, "c", 5),
+     score(16, "a", 0)],
+  );
+  // The first jornada has nothing to compare with.
+  assert.deepEqual(computeStandings(data, { jornada: 14 }).rows.map((r) => r.move), [null, null, null]);
+  // J15: Cris 11 jumps from 3rd to 1st; Ana and Bea drop one place each.
+  const at15 = computeStandings(data, { jornada: 15 });
+  assert.deepEqual(at15.rows.map((r) => [r.name, r.move]), [["Cris", 2], ["Ana", -1], ["Bea", -1]]);
+  // J16: nobody moves.
+  assert.deepEqual(computeStandings(data).rows.map((r) => r.move), [0, 0, 0]);
+});
+
+test("position change skips missing jornada numbers", () => {
+  const data = league(
+    [player("a", "Ana"), player("b", "Bea")],
+    [match(1, 1), match(3, 1)],
+    [score(1, "a", 3), score(3, "b", 5)],
+  );
+  assert.deepEqual(computeStandings(data).rows.map((r) => [r.name, r.move]), [["Bea", 1], ["Ana", -1]]);
 });

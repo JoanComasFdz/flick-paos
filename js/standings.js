@@ -4,15 +4,53 @@ import * as rules from "./rules.js";
 
 /**
  * @param {{season:string, players:object[], matchdays:object[], scores:object[]}} data
- * @param {{sharedPositions?: boolean}} [options]
+ * @param {{sharedPositions?: boolean, jornada?: number}} [options]
+ *   `jornada`: the table as it stood right after that jornada (default: the latest).
  */
 export function computeStandings(data, options = {}) {
+  const full = options.jornada == null ? data : upToJornada(data, options.jornada);
+  const matchdays = full.matchdays || [];
+  const shared = options.sharedPositions ?? rules.SHARED_POSITIONS_ON_TIE;
+
+  // Position change against the table after the previous jornada (none before the first).
+  const last = rules.lastMatchday(matchdays);
+  const previous = last ? rules.lastMatchday(matchdays.filter((m) => m.jornada < last.jornada)) : null;
+  const before = previous
+    ? new Map(rankedRows(upToJornada(full, previous.jornada), shared).map((r) => [r.player_id, r.pos]))
+    : null;
+
+  const rows = rankedRows(full, shared).map((row) => ({
+    ...row,
+    move: before ? rules.positionChange(before.get(row.player_id), row.pos) : null,
+    leader: rules.isLeader(row),
+    casaHighlighted: rules.isCasaHighlighted(row.casa),
+  }));
+
+  return {
+    season: String(full.season ?? ""),
+    rows,
+    header: matchHeader(last),
+    diceCounts: rules.diceCounts(matchdays),
+    jornadasPlayed: rules.jornadasPlayed(matchdays),
+  };
+}
+
+/** The league as it stood right after `jornada`: later matchdays and their scores left out. */
+export function upToJornada(data, jornada) {
+  const upTo = (x) => x.jornada <= jornada;
+  return {
+    ...data,
+    matchdays: (data.matchdays || []).filter(upTo),
+    scores: (data.scores || []).filter(upTo),
+  };
+}
+
+/** Active players' totals, sorted and numbered by the ranking rules. */
+function rankedRows(data, shared) {
   const players = (data.players || []).filter((p) => p.active);
   const matchdays = data.matchdays || [];
-  const scores = data.scores || [];
-
   const byPlayer = new Map(players.map((p) => [p.player_id, []]));
-  for (const s of scores) byPlayer.get(s.player_id)?.push(s);
+  for (const s of data.scores || []) byPlayer.get(s.player_id)?.push(s);
 
   const adjustments = new Set(matchdays.filter((m) => m.type === "adjustment").map((m) => m.jornada));
   const unranked = players.map((p) => {
@@ -26,23 +64,7 @@ export function computeStandings(data, options = {}) {
       extraDiceFaces: rules.extraDiceWon(own),
     };
   });
-
-  const sorted = unranked.sort(rules.compareStandings);
-  const rows = rules
-    .assignPositions(sorted, options.sharedPositions ?? rules.SHARED_POSITIONS_ON_TIE)
-    .map((row) => ({
-      ...row,
-      leader: rules.isLeader(row),
-      casaHighlighted: rules.isCasaHighlighted(row.casa),
-    }));
-
-  return {
-    season: String(data.season ?? ""),
-    rows,
-    header: matchHeader(rules.lastMatchday(matchdays)),
-    diceCounts: rules.diceCounts(matchdays),
-    jornadasPlayed: rules.jornadasPlayed(matchdays),
-  };
+  return rules.assignPositions(unranked.sort(rules.compareStandings), shared);
 }
 
 /** The match bar: jornada, teams in home-first order, score and dice when known. */

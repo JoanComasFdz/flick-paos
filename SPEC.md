@@ -174,7 +174,8 @@ Single page, hash routing:
   - Save → if no PIN stored, prompt for it (validate with `checkPin`), store it in `localStorage` (wrapped in try/catch). On `Wrong PIN`, clear the stored PIN and prompt again.
   - On success: navigate to `#/` with the new data and a toast "Jornada {n} guardada".
   - Editing an existing jornada pre-fills everything; a **Borrar jornada** button with confirm dialog.
-- `#/historial` **History**: list of matchdays (newest first): jornada, rival, score, dice, top scorer of that matchday; tap to edit.
+- `#/historial` **History**: list of matchdays (newest first): jornada, rival, score, dice, top scorer of that matchday. Tapping one opens `#/historial/{n}`: the scoreboard card as it stood right after jornada n (later jornadas left out), with ‹ › to the previous/next jornada, download/share, and a button to edit that jornada.
+- **Position change**: on every card, each position shows ▲n / ▼n for places gained or lost since the previous jornada (nothing when unchanged or for the first jornada).
 
 General:
 - Cache the last GET response in `localStorage` and render it immediately on load, then refresh from the API (stale-while-revalidate). Show "Actualizado hace X" subtly.

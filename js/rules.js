@@ -80,6 +80,15 @@ export function assignPositions(sortedRows, shared = SHARED_POSITIONS_ON_TIE) {
   });
 }
 
+/**
+ * Position change shown as ▲/▼ next to each position: places gained since the
+ * previous jornada (positive = up, negative = down, 0 = same). null when there
+ * is no previous jornada or the player wasn't in that table.
+ */
+export function positionChange(before, now) {
+  return before == null ? null : before - now;
+}
+
 /** Leader highlight: the row in position 1. */
 export function isLeader(row) {
   return row.pos === 1;
