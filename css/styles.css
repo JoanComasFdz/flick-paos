@@ -302,6 +302,13 @@ input[type="number"].input { text-align: center; }
 .history .rival { font-weight: 700; }
 .history .meta { font-size: 13px; color: var(--muted); grid-column: 2; }
 .history .die { width: 36px; height: 36px; grid-row: span 2; }
+.history-nav { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; align-items: center; margin-bottom: 12px; }
+.history-nav h2 { margin: 0; text-align: center; font-size: 20px; }
+.history-nav .btn { padding: 0; font-size: 22px; }
+.history-nav .btn[aria-disabled="true"] { opacity: .3; pointer-events: none; }
+.mini-move { font-size: 11px; }
+.mini-move.is-up { color: var(--green-text); }
+.mini-move.is-down { color: #FF8A94; }
 .history .tag { font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--garnet-2); margin-left: 6px; vertical-align: middle; }
 
 dialog {
@@ -404,7 +411,7 @@ dialog .dialog-actions .btn { flex: 1; }
   border-radius: 14px; overflow: hidden; border: 2px solid var(--navy-line);
   background: rgba(14,31,61,.85);
 }
-.c-thead, .c-row { display: grid; grid-template-columns: 120px 1fr 200px 150px 190px; align-items: center; }
+.c-thead, .c-row { display: grid; grid-template-columns: 140px 1fr 200px 150px 190px; align-items: center; }
 .c-thead {
   flex: none; height: 76px;
   background: linear-gradient(180deg, #8C1424, var(--garnet));
@@ -423,7 +430,12 @@ dialog .dialog-actions .btn { flex: 1; }
 .c-row:nth-child(even) { background: rgba(255,255,255,.035); }
 .c-row > div { height: 100%; display: flex; align-items: center; justify-content: center; border-left: 1px solid rgba(36,64,110,.7); min-width: 0; }
 .c-row > div:first-child { border-left: 0; }
-.c-row .c-pos { color: var(--gold); font-weight: 700; }
+.c-row .c-pos { color: var(--gold); font-weight: 700; gap: 8px; }
+.c-move { display: flex; flex-direction: column; align-items: center; font-size: 22px; line-height: 1; gap: 2px; }
+.c-move svg { width: 18px; height: 15px; }
+.c-move.is-up { color: var(--green-text); }
+.c-move.is-down { color: #FF5A5F; }
+.c-row.is-leader .c-move { color: var(--white); }
 .c-row .c-name { justify-content: flex-start; padding-left: 26px; gap: 10px; }
 .c-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .c-trophy { width: calc(var(--row-font) * .9); height: calc(var(--row-font) * .9); flex: none; }

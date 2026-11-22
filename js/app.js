@@ -197,12 +197,14 @@ function route() {
   const m = /^#\/jornada\/(new|\d+)$/.exec(hash);
   if (m) return openForm(m[1] === "new" ? null : Number(m[1]));
   if (hash === "#/historial") return showHistory();
+  const h = /^#\/historial\/(\d+)$/.exec(hash);
+  if (h) return showJornadaStandings(Number(h[1]));
   return showScoreboard();
 }
 
 /** Highlights the tab of the current view; a matchday form belongs to none. */
 function markTab(hash) {
-  const tab = hash === "#/historial" ? "history" : hash === "#/normas" ? "rules" : hash.startsWith("#/jornada") ? "" : "standings";
+  const tab = hash.startsWith("#/historial") ? "history" : hash === "#/normas" ? "rules" : hash.startsWith("#/jornada") ? "" : "standings";
   document.querySelectorAll("[data-tab]").forEach((a) => {
     if (a.dataset.tab === tab) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
@@ -251,15 +253,19 @@ function bindStatus() {
 
 const shareSupported = canShareFiles();
 
-function showScoreboard() {
-  const vm = computeStandings(state.data);
+/** The main scoreboard, or with `jornada` the table as it stood after that jornada. */
+function showScoreboard(jornada = null) {
+  const vm = computeStandings(state.data, { jornada });
   view.innerHTML = `
     ${statusLine()}
+    ${jornada == null ? "" : jornadaNav(jornada)}
     <div class="card-host" role="img" aria-label="${escapeHtml(cardDescription(vm))}"></div>
     <div class="actions">
       <button type="button" class="btn btn-primary download ${shareSupported ? "" : "wide"}">${t("download")}</button>
       ${shareSupported ? `<button type="button" class="btn btn-garnet share">${t("share")}</button>` : ""}
-      <a class="btn wide" href="#/jornada/new">${t("newMatchday")}</a>
+      ${jornada == null
+        ? `<a class="btn wide" href="#/jornada/new">${t("newMatchday")}</a>`
+        : `<a class="btn" href="#/jornada/${jornada}">${t("editMatchday", { n: jornada })}</a><a class="btn" href="#/historial">${t("history")}</a>`}
     </div>
     ${logoutButton()}`;
   bindStatus();
@@ -282,6 +288,30 @@ function showScoreboard() {
   // Prepare the PNG in the background so Compartir opens the share sheet at once.
   const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
   idle(() => cardPng(vm).catch(() => {}));
+}
+
+/** A history entry: the table after that jornada, with ‹ › to the jornada before and after. */
+function showJornadaStandings(jornada) {
+  if (!state.data.matchdays.some((m) => m.jornada === jornada)) {
+    view.innerHTML = `<p class="form-error">${t("notFound", { n: jornada })}</p>
+      <div class="actions"><a class="btn wide" href="#/historial">${t("history")}</a></div>`;
+    return;
+  }
+  showScoreboard(jornada);
+  window.scrollTo(0, 0);
+}
+
+function jornadaNav(jornada) {
+  const list = state.data.matchdays.map((m) => m.jornada);
+  const i = list.indexOf(jornada);
+  const link = (n, label, symbol) => n == null
+    ? `<span class="btn" aria-disabled="true">${symbol}</span>`
+    : `<a class="btn" href="#/historial/${n}" aria-label="${escapeHtml(label)}">${symbol}</a>`;
+  return `<div class="history-nav">
+    ${link(list[i - 1], t("prevJornada"), "‹")}
+    <h2>${t("standingsAfter", { n: jornada })}</h2>
+    ${link(list[i + 1], t("nextJornada"), "›")}
+  </div>`;
 }
 
 async function busy(button, label, action) {
@@ -364,7 +394,7 @@ function showHistory() {
     const best = top.names.length
       ? t("best", { names: top.names.map(escapeHtml).join(", "), pts: `${top.points > 0 ? "+" : ""}${top.points}` })
       : t("noPoints");
-    return `<li><a href="#/jornada/${md.jornada}" aria-label="${t("editMatchday", { n: md.jornada })}">
+    return `<li><a href="#/historial/${md.jornada}" aria-label="${t("viewStandings", { n: md.jornada })}">
       <span class="j">J<b>${md.jornada}</b></span>
       <span class="rival">${title}${md.type === "adjustment" ? `<span class="tag">${t("adjustmentTag")}</span>` : ""}</span>
       ${md.dice ? dieSvg(md.dice, { style: "white" }) : "<span></span>"}

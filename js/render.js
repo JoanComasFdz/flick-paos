@@ -102,12 +102,20 @@ function tableRow(r) {
   const trophies = Array.from({ length: r.titles }, () => trophySvg("c-trophy")).join("");
   const dice = r.extraDiceFaces.map((face) => dieSvg(face, { style: "ivory", className: "c-extra-die" })).join("");
   return `<div class="c-row${r.leader ? " is-leader" : ""}" style="--extra-n:${Math.max(r.extraDiceFaces.length, 1)}">
-    <div class="c-pos">${r.pos}</div>
+    <div class="c-pos"><span>${r.pos}</span>${moveBadge(r.move)}</div>
     <div class="c-name"><span class="c-name-text">${escapeHtml(r.name)}</span>${trophies}</div>
     <div class="c-pts">${r.points}</div>
     <div class="c-casa${r.casaHighlighted ? " is-positive" : ""}">${r.casa}</div>
     <div class="c-extra">${dice}</div>
   </div>`;
+}
+
+/** ▲n / ▼n: places gained or lost since the previous jornada; nothing when unchanged. */
+function moveBadge(move) {
+  if (!move) return "";
+  const up = move > 0;
+  const arrow = up ? "M6 0 12 10H0Z" : "M0 0H12L6 10Z";
+  return `<span class="c-move ${up ? "is-up" : "is-down"}"><svg viewBox="0 0 12 10" aria-hidden="true"><path d="${arrow}" fill="currentColor"/></svg>${Math.abs(move)}</span>`;
 }
 
 function dicePanel(counts, lastFace) {
@@ -135,11 +143,16 @@ export function mountScaled(host, card) {
   return fit;
 }
 
+function miniMove(move) {
+  if (!move) return "";
+  return ` <span class="mini-move ${move > 0 ? "is-up" : "is-down"}">${move > 0 ? "▲" : "▼"}${Math.abs(move)}</span>`;
+}
+
 /** Compact standings table for the form's live preview. */
 export function renderMiniTable(vm) {
   const rows = vm.rows.map((r) => `
     <tr class="${r.leader ? "is-leader" : ""}">
-      <td>${r.pos}</td><td>${escapeHtml(r.name)}</td><td class="num">${r.points}</td>
+      <td>${r.pos}${miniMove(r.move)}</td><td>${escapeHtml(r.name)}</td><td class="num">${r.points}</td>
       <td class="num">${r.casa}</td><td class="num">${r.extraDiceFaces.map((f) => f || "?").join(" ")}</td>
     </tr>`).join("");
   return `<table class="mini">
